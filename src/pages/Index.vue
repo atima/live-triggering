@@ -5,36 +5,42 @@
       <div class="relative-position">
         <iframe width="560" height="315" src="https://www.youtube.com/embed/eB_bZcEhKzk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-        <div class="fixedObjWrapper"
-          :class="{ 'active': behaviorMode==='fixed', 'visible': show.logoObj }"
+        <wrapper
+          color="pink"
+          button-id="1"
+          :is-active="behaviorMode==='fixed'"
+          :is-visible="show.logoObj"
           style="width: 60px; height: 30px; position: absolute; top: 5px; right: 5px; background-color: white;">
-          <q-badge v-if="behaviorMode==='fixed'" color="pink" floating transparent>0</q-badge>
           Logo
-        </div>
+        </wrapper>
 
-        <div class="fixedObjWrapper"
-          :class="{ 'active': behaviorMode==='fixed', 'visible': show.cameraObj }"
+        <wrapper
+          color="pink"
+          button-id="2"
+          :is-active="behaviorMode==='fixed'"
+          :is-visible="show.cameraObj"
           style="width: 108px; height: 80px; position: absolute; bottom: 5px; left: 5px; background-color: white;">
-          <q-badge v-if="behaviorMode==='fixed'" color="pink" floating transparent>1</q-badge>
           Camera
-        </div>
+        </wrapper>
 
-        <div class="fixedObjWrapper"
-          :class="{ 'active': behaviorMode==='fixed', 'visible': show.commentBoxObj }"
+        <wrapper
+          color="pink"
+          button-id="3"
+          :is-active="behaviorMode==='fixed'"
+          :is-visible="show.commentBoxObj"
           style="width: 150px; height: 100px; position: absolute; bottom: 5px; right: 5px;">
-          <div v-chat-scroll class="commentBox">
-            <q-badge v-if="behaviorMode==='fixed'" color="pink" floating transparent>2</q-badge>
 
-            <div v-for="(item, i) in feedObj" :key="i"
-              :class="{ 'active': behaviorMode==='event', 'visible': feedObj[i].show }" class="eventObjWrapper q-ma-xs"
-              style="position: relative;">
-              <q-badge v-if="typeof feedObj[i].btnIndex !== 'undefined' && behaviorMode==='event'" color="blue" floating transparent>
-                {{ feedObj[i].btnIndex }}
-              </q-badge>
-              <strong>{{ feedObj[i].name }}</strong>: {{ feedObj[i].message }}
-            </div>
+          <div v-chat-scroll class="commentBox">
+            <wrapper v-for="item in feedObj" :key="item.objIndex"
+              color="blue"
+              :button-id="item.btnIndex"
+              :is-active="behaviorMode==='event'"
+              :is-visible="item.show"
+              class="relative-position q-ma-xs">
+              <strong>{{ item.name }}</strong>: {{ item.message }}
+            </wrapper>
           </div>
-        </div>
+        </wrapper>
       </div>
     </div>
 
@@ -47,44 +53,63 @@
       <div class="bg-white text-center q-pb-xs">Controller</div>
       <div class="bg-white row">
         <div v-if="behaviorMode==='event'" class="objBtnWrapper row">
-          <q-btn v-for="(v, i) in 12" :key="i" class="deckBtn event"
-            :class="{ 'new': i === feedBtnIndex-1 }"
-            @click="(feedBtn[i].show)? remove(i) : display(i)">
-            <div v-if="typeof feedBtn[i] !== 'undefined'">
-              <q-badge color="blue" floating transparent>{{ i }}</q-badge>
-              <q-icon v-if="feedBtn[i].show" name="check_circle" class="status" size="40px" color="green-3" />
-              Comment
-              <span class="text-caption">{{ feedBtn[i].name }}</span>
-            </div>
-          </q-btn>
+          <div v-for="i in 12" :key="i">
+            <wrapper class="deckBtn"
+              v-if="typeof feedBtn[i] !== 'undefined'"
+              color="blue"
+              :bgColor="feedBtn[i].color"
+              :button-id="i"
+              :is-button="true"
+              :is-visible="feedBtn[i].show"
+              @click.native="(feedBtn[i].show)? remove(i) : display(i)">
+                Comment
+                <span class="text-caption">{{ feedBtn[i].name }}</span>
+            </wrapper>
+
+            <q-btn v-else class="deckBtn"></q-btn>
+          </div>
         </div>
+
         <div v-else-if="behaviorMode==='fixed'" class="objBtnWrapper row">
-          <q-btn class="deckBtn" @click="show.logoObj = !show.logoObj">
-            <q-badge color="pink" floating transparent>0</q-badge>
-            <q-icon v-if="show.logoObj"
-              name="check_circle" class="status" size="40px" color="green-3" />
-            Logo
-          </q-btn>
-          <q-btn class="deckBtn" @click="show.cameraObj = !show.cameraObj">
-            <q-badge color="pink" floating transparent>1</q-badge>
-            <q-icon v-if="show.cameraObj"
-              name="check_circle" class="status" size="40px" color="green-3" />
-            Camera
-          </q-btn>
-          <q-btn class="deckBtn" @click="show.commentBoxObj = !show.commentBoxObj">
-            <q-badge color="pink" floating transparent>2</q-badge>
-            <q-icon v-if="show.commentBoxObj"
-              name="check_circle" class="status" size="40px" color="green-3" />
-            Comment Box
-          </q-btn>
+          <wrapper class="deckBtn"
+            color="pink"
+            button-id="1"
+            :is-button="true"
+            :is-visible="show.logoObj"
+            @click.native="show.logoObj = !show.logoObj">
+              Logo
+          </wrapper>
+
+          <wrapper class="deckBtn"
+            color="pink"
+            button-id="2"
+            :is-button="true"
+            :is-visible="show.cameraObj"
+            @click.native="show.cameraObj = !show.cameraObj">
+              Camera
+          </wrapper>
+
+          <wrapper class="deckBtn"
+            color="pink"
+            button-id="3"
+            :is-button="true"
+            :is-visible="show.commentBoxObj"
+            @click.native="show.commentBoxObj = !show.commentBoxObj">
+              Comment Box
+          </wrapper>
+
           <q-btn v-for="i in 9" class="deckBtn" :key="i"></q-btn>
         </div>
+
         <div v-else class="objBtnWrapper row">
-          <q-btn class="deckBtn" @click="isAutoShowComment = !isAutoShowComment">
-            <q-icon v-if="isAutoShowComment"
-              name="check_circle" class="status" size="40px" color="green-3" />
-            Auto Show Comment
-          </q-btn>
+          <wrapper class="deckBtn"
+            color="orange"
+            :is-button="true"
+            :is-visible="isAutoShowComment"
+            @click.native="isAutoShowComment = !isAutoShowComment">
+              Auto Show Comment
+          </wrapper>
+
           <q-btn v-for="i in 11" class="deckBtn" :key="i"></q-btn>
         </div>
 
@@ -111,8 +136,13 @@ import Vue from 'vue'
 import VueChatScroll from 'vue-chat-scroll'
 Vue.use(VueChatScroll)
 
+import Wrapper from 'components/Wrapper'
+
 export default {
   name: 'PageIndex',
+  components: {
+    Wrapper
+  },
   data () {
     return {
       isFeeding: false,
@@ -137,9 +167,9 @@ export default {
         { name: 'G', message: 'Click a button twice to show and remove this comment.' },
         { name: 'H', message: 'End.' }
       ],
-      feedBtnIndex: 0,
+      feedBtnIndex: 1,
       feedBtn: {},
-      feedObjIndex: 0,
+      feedObjIndex: 1,
       feedObj: {},
       feedObjLightColor: true,
       behaviorMode: 'event'
@@ -153,7 +183,7 @@ export default {
       data.btnIndex = this.feedBtnIndex
       data.objIndex = this.feedObjIndex
       data.show = this.isAutoShowComment
-      data.color = (this.feedObjLightColor) ? 'blue-1' : 'blue-2'
+      data.color = (this.feedObjLightColor) ? 'white' : 'blue-1'
 
       // Reuse the button. Clear the number from the existing object.
       if (typeof this.feedBtn[this.feedBtnIndex] !== 'undefined') {
@@ -169,8 +199,8 @@ export default {
       this.feedObjIndex++
 
       if (this.feedDataIndex === this.feedData.length) this.feedDataIndex = 0
-      if (this.feedBtnIndex >= 12) {
-        this.feedBtnIndex = 0
+      if (this.feedBtnIndex > 12) {
+        this.feedBtnIndex = 1
         this.feedObjLightColor = !this.feedObjLightColor
       }
     },
@@ -178,10 +208,6 @@ export default {
       var objIndex = this.feedBtn[btnIndex].objIndex
       var data = this.feedBtn[btnIndex]
       data.show = true
-
-      // Don't know why but using only set will not update the UI
-      this.$delete(this.feedBtn, btnIndex)
-      this.$delete(this.feedObj, objIndex)
 
       this.$set(this.feedBtn, btnIndex, data)
       this.$set(this.feedObj, objIndex, data)
@@ -193,7 +219,9 @@ export default {
     }
   },
   mounted () {
-    setInterval(this.loadFeed, 3000)
+    this.loadFeed()
+    this.loadFeed()
+    setInterval(this.loadFeed, 1000)
   }
 }
 </script>
@@ -209,23 +237,7 @@ export default {
   width: 50px;
   height: 50px;
   margin: 2px;
-  border: 1px solid grey;
   font-size: xx-small;
-}
-.status {
-  z-index: -1;
-  position: absolute;
-  top: 5px;
-  left: 5px;
-}
-.fixedObjWrapper, .eventObjWrapper {
-  border: 2px dashed transparent;
-  padding: 1px;
-  opacity: 0.8;
-}
-.fixedObjWrapper.visible, .eventObjWrapper.visible {
-  border-style: solid;
-  opacity: 1;
 }
 .commentBox {
   width: 100%;
@@ -247,16 +259,4 @@ export default {
 .commentBox::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
-</style>
-
-<style lang="stylus">
-.fixedObjWrapper.active
-  border-color $pink
-.eventObjWrapper.active
-  border-color $blue
-
-@-webkit-keyframes blink
-  50% { border-color: $blue; }
-.deckBtn.new
-  -webkit-animation: blink .5s step-end 8 alternate;
 </style>
