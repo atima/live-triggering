@@ -1,53 +1,103 @@
 <template>
   <q-page class="flex flex-center row bg-grey-10">
-    <div class="bg-white column">
-      <div class="text-center q-pb-xs">Broadcasting Application</div>
-      <div class="relative-position">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/eB_bZcEhKzk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-        <wrapper
+    <screen :mode="show.layout">
+      <template v-slot:gameMain>
+        <wrapper class="relative-position q-ma-xs"
           color="pink"
-          button-id="1"
+          button-id="9"
           :is-active="behaviorMode==='fixed'"
-          :is-visible="show.logoObj"
-          style="width: 60px; height: 30px; position: absolute; top: 5px; right: 5px; background-color: white;">
-          Logo
-        </wrapper>
+          :is-visible="show.layout==='gameMain'">
 
-        <wrapper
+          <video ref="gameFeed" width="580" height="330" loop>
+            <source src="statics/game.mp4" type="video/mp4">
+          </video>
+
+          <wrapper
+            color="pink"
+            button-id="1"
+            :is-active="behaviorMode==='fixed'"
+            :is-visible="show.logoObj"
+            style="width: 60px; height: 30px; position: absolute; top: 10px; right: 5px; background-color: white;">
+            Logo
+          </wrapper>
+
+          <wrapper
+            color="pink"
+            button-id="2"
+            :is-active="behaviorMode==='fixed'"
+            :is-visible="show.cameraObj"
+            style="width: 120px; height: 70px; position: absolute; top: 150px; left: 5px;">
+            <video ref="cameraFeed" width="100%" loop>
+              <source src="statics/camera.mp4" type="video/mp4">
+            </video>
+          </wrapper>
+
+          <wrapper
+            color="pink"
+            button-id="3"
+            :is-active="behaviorMode==='fixed'"
+            :is-visible="show.commentBoxObj"
+            style="width: 150px; height: 120px; position: absolute;top: 90px; right: 5px;">
+            <div v-chat-scroll class="commentBox">
+              <wrapper v-for="item in feedObj" :key="item.objIndex"
+                color="blue"
+                :button-id="item.btnIndex"
+                :is-active="behaviorMode==='event'"
+                :is-visible="item.show"
+                class="relative-position q-ma-xs">
+                <strong>{{ item.name }}</strong>: {{ item.message }}
+              </wrapper>
+            </div>
+          </wrapper>
+        </wrapper>
+      </template>
+
+      <template v-slot:gameOnly>
+        <wrapper class="relative-position q-ma-xs"
           color="pink"
-          button-id="2"
+          button-id="10"
           :is-active="behaviorMode==='fixed'"
-          :is-visible="show.cameraObj"
-          style="width: 108px; height: 80px; position: absolute; bottom: 5px; left: 5px; background-color: white;">
-          Camera
+          :is-visible="show.layout==='gameOnly'">
+          <video ref="gameFeedOnly" width="180" height="99" loop>
+            <source src="statics/game.mp4" type="video/mp4">
+          </video>
         </wrapper>
+      </template>
 
-        <wrapper
+      <template v-slot:cameraOnly>
+        <wrapper class="relative-position q-ma-xs"
           color="pink"
-          button-id="3"
+          button-id="11"
           :is-active="behaviorMode==='fixed'"
-          :is-visible="show.commentBoxObj"
-          style="width: 150px; height: 100px; position: absolute; bottom: 5px; right: 5px;">
-
-          <div v-chat-scroll class="commentBox">
-            <wrapper v-for="item in feedObj" :key="item.objIndex"
-              color="blue"
-              :button-id="item.btnIndex"
-              :is-active="behaviorMode==='event'"
-              :is-visible="item.show"
-              class="relative-position q-ma-xs">
-              <strong>{{ item.name }}</strong>: {{ item.message }}
-            </wrapper>
-          </div>
+          :is-visible="show.layout==='cameraOnly'">
+          <video ref="cameraFeedOnly" width="180" height="99" loop>
+            <source src="statics/camera.mp4" type="video/mp4">
+          </video>
         </wrapper>
-      </div>
-    </div>
+      </template>
+
+      <template v-slot:cameraMain>
+        <wrapper class="relative-position q-ma-xs"
+          color="pink"
+          button-id="12"
+          :is-active="behaviorMode==='fixed'"
+          :is-visible="show.layout==='cameraMain'">
+            <video ref="camera2" width="180" height="99" loop>
+              <source src="statics/camera.mp4" type="video/mp4">
+            </video>
+
+            <video ref="game2" width="54" height="30" loop
+              style="position: absolute; top: 5px; left: 5px;">
+              <source src="statics/game.mp4" type="video/mp4">
+            </video>
+        </wrapper>
+      </template>
+    </screen>
 
     <div class="column q-ml-md">
       <div class="text-right q-ma-xs">
-        <q-btn v-if="!isFeeding" color="black" label="Start" @click="isFeeding = true" />
-        <q-btn v-if="isFeeding" color="black" label="Stop" @click="isFeeding = false" />
+        <q-btn v-if="!isFeeding" color="black" label="Start" @click="start()" />
+        <q-btn v-if="isFeeding" color="black" label="Stop" @click="stop()" />
       </div>
 
       <div class="bg-white text-center q-pb-xs">Controller</div>
@@ -98,7 +148,47 @@
               Comment Box
           </wrapper>
 
-          <q-btn v-for="i in 9" class="deckBtn" :key="i"></q-btn>
+          <q-btn v-for="i in 5" class="deckBtn" :key="i"></q-btn>
+
+          <wrapper class="deckBtn"
+            color="pink"
+            button-id="9"
+            :is-button="true"
+            :is-visible="show.layout === 'gameMain'"
+            @click.native="show.layout = 'gameMain'">
+              Layout
+              <span class="text-caption">Default</span>
+          </wrapper>
+
+          <wrapper class="deckBtn"
+            color="pink"
+            button-id="10"
+            :is-button="true"
+            :is-visible="show.layout === 'gameOnly'"
+            @click.native="show.layout = 'gameOnly'">
+              Layout
+              <span class="text-caption">Game</span>
+          </wrapper>
+
+          <wrapper class="deckBtn"
+            color="pink"
+            button-id="11"
+            :is-button="true"
+            :is-visible="show.layout === 'cameraOnly'"
+            @click.native="show.layout = 'cameraOnly'">
+              Layout
+              <span class="text-caption">Camera</span>
+          </wrapper>
+
+          <wrapper class="deckBtn"
+            color="pink"
+            button-id="11"
+            :is-button="true"
+            :is-visible="show.layout === 'cameraMain'"
+            @click.native="show.layout = 'cameraMain'">
+              Layout
+              <span class="text-caption">Talk</span>
+          </wrapper>
         </div>
 
         <div v-else class="objBtnWrapper row">
@@ -123,9 +213,6 @@
   </q-page>
 </template>
 
-<style>
-</style>
-
 <script>
 /**
  * Limitations:
@@ -137,11 +224,13 @@ import VueChatScroll from 'vue-chat-scroll'
 Vue.use(VueChatScroll)
 
 import Wrapper from 'components/Wrapper'
+import Screen from 'components/Screen'
 
 export default {
   name: 'PageIndex',
   components: {
-    Wrapper
+    Wrapper,
+    Screen
   },
   data () {
     return {
@@ -150,7 +239,8 @@ export default {
       show: {
         'logoObj': true,
         'cameraObj': true,
-        'commentBoxObj': true
+        'commentBoxObj': true,
+        'layout': 'gameMain'
       },
       feedDataIndex: 0,
       feedData: [
@@ -216,6 +306,24 @@ export default {
       var objIndex = this.feedBtn[btnIndex].objIndex
       this.$delete(this.feedBtn, btnIndex)
       this.$delete(this.feedObj, objIndex)
+    },
+    start: function () {
+      this.isFeeding = true
+      this.$refs.gameFeed.play()
+      this.$refs.cameraFeed.play()
+      this.$refs.gameFeedOnly.play()
+      this.$refs.cameraFeedOnly.play()
+      this.$refs.game2.play()
+      this.$refs.camera2.play()
+    },
+    stop: function () {
+      this.isFeeding = false
+      this.$refs.gameFeed.pause()
+      this.$refs.cameraFeed.pause()
+      this.$refs.gameFeedOnly.pause()
+      this.$refs.cameraFeedOnly.pause()
+      this.$refs.game2.pause()
+      this.$refs.camera2.pause()
     }
   },
   mounted () {
@@ -238,6 +346,9 @@ export default {
   height: 50px;
   margin: 2px;
   font-size: xx-small;
+}
+.text-caption {
+  font-size: x-small;
 }
 .commentBox {
   width: 100%;

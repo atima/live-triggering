@@ -9,13 +9,16 @@
   </q-btn>
 
   <div v-else-if="isActive && buttonId"
-    class="wrapper" :class="{ 'visible': isVisible }"
+    class="wrapper shadow-3" :class="{ 'visible': isVisible }"
     :style="{ 'border-color': colorHex }">
     <q-badge :color="color" floating transparent>{{ buttonId }}</q-badge>
     <slot></slot>
   </div>
 
-  <div v-else-if="isVisible" class="wrapper visible"><slot></slot></div>
+  <div v-else class="wrapper"
+    :class="{ 'visible': isVisible, 'fade': !isVisible }">
+    <slot></slot>
+  </div>
 </template>
 
 <script>
@@ -51,6 +54,9 @@ export default {
 }
 .wrapper.visible {
   border-style: solid;
+}
+.wrapper.fade {
+  opacity: 0.4;
 }
 .status {
   opacity: 0.3;
