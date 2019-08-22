@@ -38,7 +38,7 @@
             :is-active="behaviorMode==='fixed'"
             :is-visible="show.commentBoxObj"
             style="width: 150px; height: 120px; position: absolute;top: 90px; right: 5px;">
-            <div v-chat-scroll class="commentBox">
+            <div v-chat-scroll="{always: true, scrollonremoved:true}" class="commentBox">
               <wrapper v-for="item in feedObj" :key="item.objIndex"
                 color="blue"
                 :button-id="item.btnIndex"
