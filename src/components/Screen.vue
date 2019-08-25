@@ -1,13 +1,12 @@
 <template>
-  <div class="bg-white">
-    <div class="text-center q-pb-xs">Broadcasting Application</div>
-    <div class="row">
+  <div class="row fit">
+    <div class="col-9">
       <slot name="gameMain"></slot>
-      <div class="column">
-        <slot name="gameOnly"></slot>
-        <slot name="cameraOnly"></slot>
-        <slot name="cameraMain"></slot>
-      </div>
+    </div>
+    <div class="col-3 column">
+      <slot name="gameOnly"></slot>
+      <slot name="cameraOnly"></slot>
+      <slot name="cameraMain"></slot>
     </div>
   </div>
 </template>

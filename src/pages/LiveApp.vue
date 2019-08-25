@@ -1,5 +1,5 @@
 <template>
-  <q-page class="flex flex-center row bg-grey-10">
+  <q-page class="fit row bg-grey-10">
     <screen :mode="status.fixed.layout">
       <template v-slot:gameMain>
         <wrapper class="relative-position q-ma-xs"
@@ -8,7 +8,7 @@
           :is-active="status.mode.behavior==='fixed'"
           :is-visible="status.fixed.layout==='gameMain'">
 
-          <video ref="gameFeed" width="580" height="330" loop>
+          <video ref="gameFeed" width="100%" loop>
             <source src="statics/game.mp4" type="video/mp4">
           </video>
 
@@ -17,7 +17,7 @@
             button-id="1"
             :is-active="status.mode.behavior==='fixed'"
             :is-visible="status.fixed.logoObj"
-            style="width: 60px; height: 30px; position: absolute; top: 10px; right: 5px; background-color: white;">
+            style="width: 60px; height: 30px; position: absolute; top: 1%; right: 1%; background-color: white;">
             Logo
           </wrapper>
 
@@ -26,7 +26,7 @@
             button-id="2"
             :is-active="status.mode.behavior==='fixed'"
             :is-visible="status.fixed.cameraObj"
-            style="width: 120px; height: 70px; position: absolute; top: 150px; left: 5px;">
+            style="width: 25%; position: absolute; top: 50%; left: 1%;">
             <video ref="cameraFeed" width="100%" loop>
               <source src="statics/camera.mp4" type="video/mp4">
             </video>
@@ -37,7 +37,7 @@
             button-id="3"
             :is-active="status.mode.behavior==='fixed'"
             :is-visible="status.fixed.commentBoxObj"
-            style="width: 150px; height: 120px; position: absolute;top: 90px; right: 5px;">
+            style="width: 30%; height: 40%; position: absolute;top: 30%; right: 1%;">
             <div v-chat-scroll="{always: true, scrollonremoved:true}" class="commentBox">
               <wrapper v-for="item in feedObj" :key="item.objIndex"
                 color="blue"
@@ -58,7 +58,7 @@
           button-id="10"
           :is-active="status.mode.behavior==='fixed'"
           :is-visible="status.fixed.layout==='gameOnly'">
-          <video ref="gameFeedOnly" width="180" height="99" loop>
+          <video ref="gameFeedOnly" width="100%" loop>
             <source src="statics/game.mp4" type="video/mp4">
           </video>
         </wrapper>
@@ -70,7 +70,7 @@
           button-id="11"
           :is-active="status.mode.behavior==='fixed'"
           :is-visible="status.fixed.layout==='cameraOnly'">
-          <video ref="cameraFeedOnly" width="180" height="99" loop>
+          <video ref="cameraFeedOnly" width="100%" loop>
             <source src="statics/camera.mp4" type="video/mp4">
           </video>
         </wrapper>
@@ -82,12 +82,12 @@
           button-id="12"
           :is-active="status.mode.behavior==='fixed'"
           :is-visible="status.fixed.layout==='cameraMain'">
-            <video ref="camera2" width="180" height="99" loop>
+            <video ref="camera2" width="100%" loop>
               <source src="statics/camera.mp4" type="video/mp4">
             </video>
 
-            <video ref="game2" width="54" height="30" loop
-              style="position: absolute; top: 5px; left: 5px;">
+            <video ref="game2" width="30%" loop
+              style="position: absolute; top: 1%; left: 1%;">
               <source src="statics/game.mp4" type="video/mp4">
             </video>
         </wrapper>
@@ -250,21 +250,6 @@ export default {
 </script>
 
 <style>
-.actionBtnWrapper {
-  width: 54px;
-}
-.objBtnWrapper {
-  width: 216px;
-}
-.deckBtn {
-  width: 50px;
-  height: 50px;
-  margin: 2px;
-  font-size: xx-small;
-}
-.text-caption {
-  font-size: x-small;
-}
 .commentBox {
   width: 100%;
   height: 100%;
