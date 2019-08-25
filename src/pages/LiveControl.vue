@@ -165,7 +165,6 @@ export default {
       feedBtnIndex: 1,
       feedBtn: {},
       feedObjIndex: 1,
-      feedObj: {},
       feedObjLightColor: true,
       status: {
         'mode': {
@@ -190,18 +189,9 @@ export default {
       if (!this.status.misc.feeding) return
 
       var data = JSON.parse(JSON.stringify(this.feedData[this.feedDataIndex])) // clone object
-      data.btnIndex = this.feedBtnIndex
-      data.objIndex = this.feedObjIndex
       data.color = (this.feedObjLightColor) ? 'white' : 'blue-1'
 
-      // Reuse the button. Clear the number from the existing object.
-      if (typeof this.feedBtn[this.feedBtnIndex] !== 'undefined') {
-        var removeBtnIndexFrom = this.feedBtn[this.feedBtnIndex].objIndex
-        this.$delete(this.feedObj[removeBtnIndexFrom], 'btnIndex')
-      }
-
       this.$set(this.feedBtn, this.feedBtnIndex, data)
-      this.$set(this.feedObj, this.feedObjIndex, data)
       this.$set(this.status['event'], this.feedBtnIndex, this.status.misc.autoShowComment)
 
       this.socket.emit('message', {
@@ -236,9 +226,6 @@ export default {
   },
   mounted () {
     setInterval(this.loadFeed, 3000)
-    this.socket.on('chat message', function (msg) {
-      console.log(msg)
-    })
   }
 }
 </script>
@@ -258,5 +245,6 @@ export default {
 }
 .deckBtn {
   height: 33%;
+  overflow: hidden;
 }
 </style>

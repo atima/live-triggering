@@ -17,7 +17,7 @@
             button-id="1"
             :is-active="status.mode.behavior==='fixed'"
             :is-visible="status.fixed.logoObj"
-            style="width: 60px; height: 30px; position: absolute; top: 1%; right: 1%; background-color: white;">
+            style="width: 10%; height: 10%; position: absolute; top: 1%; right: 1%; background-color: white;">
             Logo
           </wrapper>
 
@@ -119,12 +119,6 @@ export default {
   data () {
     return {
       socket: {},
-      show: {
-        'logoObj': true,
-        'cameraObj': true,
-        'commentBoxObj': true,
-        'layout': 'gameMain'
-      },
       feedDataIndex: 0,
       feedData: [
         { name: 'Admin', message: 'Thank you for participating in this study.' },
@@ -140,9 +134,6 @@ export default {
         { name: 'G', message: 'Click a button twice to show and remove this comment.' },
         { name: 'H', message: 'End.' }
       ],
-      feedBtnIndex: 1,
-      feedBtn: {},
-      feedObjIndex: 1,
       feedObj: {},
       feedBtnMapping: {
         // buttonId: objectId
@@ -172,30 +163,16 @@ export default {
       var data = JSON.parse(JSON.stringify(this.feedData[feedDataIndex])) // clone object
       data.btnIndex = feedBtnIndex
       data.objIndex = feedObjIndex
-      data.show = this.status.misc.autoShowComment
-      data.color = (this.feedObjLightColor) ? 'white' : 'blue-1'
 
       // Reuse the button. Clear the number from the existing object.
-      if (typeof this.feedBtn[feedBtnIndex] !== 'undefined') {
-        var removeBtnIndexFrom = this.feedBtn[feedBtnIndex].objIndex
+      if (typeof this.feedBtnMapping[feedBtnIndex] !== 'undefined') {
+        var removeBtnIndexFrom = this.feedBtnMapping[feedBtnIndex]
         this.$delete(this.feedObj[removeBtnIndexFrom], 'btnIndex')
       }
 
-      this.$set(this.feedBtn, feedBtnIndex, data)
+      this.$set(this.feedBtnMapping, feedBtnIndex, feedObjIndex)
       this.$set(this.feedObj, feedObjIndex, data)
-    },
-    display: function (btnIndex) {
-      var objIndex = this.feedBtn[btnIndex].objIndex
-      var data = this.feedBtn[btnIndex]
-      data.show = true
-
-      this.$set(this.feedBtn, btnIndex, data)
-      this.$set(this.feedObj, objIndex, data)
-    },
-    remove: function (btnIndex) {
-      var objIndex = this.feedBtn[btnIndex].objIndex
-      this.$delete(this.feedBtn, btnIndex)
-      this.$delete(this.feedObj, objIndex)
+      this.$set(this.status['event'], feedBtnIndex, this.status.misc.autoShowComment)
     },
     start: function () {
       this.$refs.gameFeed.play()
@@ -225,8 +202,9 @@ export default {
         this.loadFeed(message.feedDataIndex, message.feedBtnIndex, message.feedObjIndex)
         return
       } else if (message.type === 'delete-event') {
-        var objIndex = this.feedBtn[message.id].objIndex
-        this.$delete(this.feedBtn, message.id)
+        var objIndex = this.feedBtnMapping[message.id]
+        this.$delete(this.status['event'], message.id)
+        this.$delete(this.feedBtnMapping, message.id)
         this.$delete(this.feedObj, objIndex)
         return
       }
@@ -254,7 +232,6 @@ export default {
   width: 100%;
   height: 100%;
   background-color: white;
-  font-size: x-small;
   overflow-x: hidden;
   overflow-y: scroll;
 }
