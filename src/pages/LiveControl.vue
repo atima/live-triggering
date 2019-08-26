@@ -147,6 +147,7 @@ export default {
   data () {
     return {
       socket: {},
+      room: null,
       feedDataIndex: 0,
       feedData: [
         { name: 'Admin', message: 'Thank you for participating in this study.' },
@@ -195,7 +196,7 @@ export default {
       this.$set(this.status['event'], this.feedBtnIndex, this.status.misc.autoShowComment)
 
       this.socket.emit('message', {
-        'type': 'create-event', 'feedDataIndex': this.feedDataIndex, 'feedBtnIndex': this.feedBtnIndex, 'feedObjIndex': this.feedObjIndex
+        'room': this.room, 'type': 'create-event', 'feedDataIndex': this.feedDataIndex, 'feedBtnIndex': this.feedBtnIndex, 'feedObjIndex': this.feedObjIndex
       })
 
       this.feedDataIndex++
@@ -210,19 +211,28 @@ export default {
     },
     trigger: function (type, id, value) {
       this.$set(this.status[type], id, value)
-      this.socket.emit('message', { 'type': type, 'id': id, 'value': value })
+      this.socket.emit('message', { 'room': this.room, 'type': type, 'id': id, 'value': value })
     },
     triggerEvent: function (btnIndex) {
       if (this.status.event[btnIndex]) {
         this.$delete(this.feedBtn, btnIndex)
-        this.socket.emit('message', { 'type': 'delete-event', 'id': btnIndex })
+        this.socket.emit('message', { 'room': this.room, 'type': 'delete-event', 'id': btnIndex })
       } else {
         this.trigger('event', btnIndex, true)
       }
+    },
+    joinRoom: function () {
+      this.room = (this.$route.params.room) ? this.$route.params.room : 'default'
+      this.socket.emit('room', this.room)
     }
   },
   created () {
-    this.socket = io('http://localhost:3000')
+    if (process.env.DEV) {
+      this.socket = io('http://localhost:3000')
+    } else {
+      this.socket = io()
+    }
+    this.socket.on('connect', this.joinRoom)
   },
   mounted () {
     setInterval(this.loadFeed, 3000)

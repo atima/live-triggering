@@ -245,10 +245,19 @@ export default {
       if (message.type === 'misc' && message.id === 'feeding') {
         this.setFeeding(value)
       }
+    },
+    joinRoom: function () {
+      var room = (this.$route.params.room) ? this.$route.params.room : 'default'
+      this.socket.emit('room', room)
     }
   },
   created () {
-    this.socket = io('http://localhost:3000')
+    if (process.env.DEV) {
+      this.socket = io('http://localhost:3000')
+    } else {
+      this.socket = io()
+    }
+    this.socket.on('connect', this.joinRoom)
   },
   mounted () {
     // setInterval(this.loadFeed, 3000)

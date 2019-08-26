@@ -36,7 +36,7 @@ module.exports = function (ctx) {
         'QDrawer',
         'QPageContainer',
         'QPage',
-        'QScrollArea',
+        'QInput',
         'QBtn',
         'QIcon',
         'QBadge'
@@ -56,7 +56,7 @@ module.exports = function (ctx) {
 
     build: {
       scopeHoisting: true,
-      // vueRouterMode: 'history',
+      vueRouterMode: 'history',
       // vueCompiler: true,
       // gzip: true,
       // analyze: true,
