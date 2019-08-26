@@ -27,8 +27,7 @@
             :is-active="status.mode.behavior==='fixed'"
             :is-visible="status.fixed.cameraObj"
             style="width: 25%; position: absolute; top: 50%; left: 1%;">
-            <video ref="cameraFeed" width="100%" loop>
-              <source src="statics/camera.mp4" type="video/mp4">
+            <video ref="cameraFeed" width="100%" :src="cameraSource">
             </video>
           </wrapper>
 
@@ -70,8 +69,7 @@
           button-id="11"
           :is-active="status.mode.behavior==='fixed'"
           :is-visible="status.fixed.layout==='cameraOnly'">
-          <video ref="cameraFeedOnly" width="100%" loop>
-            <source src="statics/camera.mp4" type="video/mp4">
+          <video ref="cameraFeedOnly" width="100%" :src="cameraSource">
           </video>
         </wrapper>
       </template>
@@ -82,8 +80,7 @@
           button-id="12"
           :is-active="status.mode.behavior==='fixed'"
           :is-visible="status.fixed.layout==='cameraMain'">
-            <video ref="camera2" width="100%" loop>
-              <source src="statics/camera.mp4" type="video/mp4">
+            <video ref="camera2" width="100%" :src="cameraSource">
             </video>
 
             <video ref="game2" width="30%" loop
@@ -104,11 +101,19 @@
 
 import Vue from 'vue'
 import VueChatScroll from 'vue-chat-scroll'
+import getUserMedia from 'getusermedia'
 Vue.use(VueChatScroll)
 
 import io from 'socket.io-client'
 import Wrapper from 'components/Wrapper'
 import Screen from 'components/Screen'
+
+const Constraints = {
+  video: {
+    width: 320,
+    height: 180
+  }
+}
 
 export default {
   name: 'PageIndex',
@@ -119,6 +124,7 @@ export default {
   data () {
     return {
       socket: {},
+      cameraSource: null,
       feedDataIndex: 0,
       feedData: [
         { name: 'Admin', message: 'Thank you for participating in this study.' },
@@ -159,6 +165,36 @@ export default {
     }
   },
   methods: {
+    loadSrcStream (stream) {
+      // Adapted from https://github.com/kelvin2go/vue-cam-vision/blob/master/src/webcam.vue
+      if ('srcObject' in this.$refs.cameraFeed) {
+        try {
+          this.$refs.cameraFeed.srcObject = stream
+          this.$refs.cameraFeedOnly.srcObject = stream
+          this.$refs.camera2.srcObject = stream
+        } catch (err) {
+          console.log(err)
+        }
+      } else {
+        // old broswers
+        this.source = window.HTMLMediaElement.srcObject(stream)
+      }
+
+      this.$refs.cameraFeed.play()
+      this.$refs.cameraFeedOnly.play()
+      this.$refs.camera2.play()
+      this.$emit('started', stream)
+    },
+    loadCamera () {
+      getUserMedia(Constraints, (err, stream) => {
+        if (err) {
+          this.$emit('error', err)
+          console.log('failed to get user camera')
+          return
+        }
+        this.loadSrcStream(stream)
+      })
+    },
     loadFeed: function (feedDataIndex, feedBtnIndex, feedObjIndex) {
       var data = JSON.parse(JSON.stringify(this.feedData[feedDataIndex])) // clone object
       data.btnIndex = feedBtnIndex
@@ -176,19 +212,13 @@ export default {
     },
     start: function () {
       this.$refs.gameFeed.play()
-      this.$refs.cameraFeed.play()
       this.$refs.gameFeedOnly.play()
-      this.$refs.cameraFeedOnly.play()
       this.$refs.game2.play()
-      this.$refs.camera2.play()
     },
     stop: function () {
       this.$refs.gameFeed.pause()
-      this.$refs.cameraFeed.pause()
       this.$refs.gameFeedOnly.pause()
-      this.$refs.cameraFeedOnly.pause()
       this.$refs.game2.pause()
-      this.$refs.camera2.pause()
     },
     setFeeding: function (feeding) {
       if (feeding) {
@@ -222,6 +252,7 @@ export default {
   },
   mounted () {
     // setInterval(this.loadFeed, 3000)
+    this.loadCamera()
     this.socket.on('message', this.trigger)
   }
 }
