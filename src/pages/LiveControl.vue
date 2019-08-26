@@ -1,7 +1,7 @@
 <template>
   <q-page class="fit row">
     <div v-if="status.mode.behavior==='event'" class="objBtnWrapper row">
-      <div v-for="i in 12" :key="i"  class="deckBtn">
+      <div v-for="i in 12" :key="i" class="q-btn q-pa-none q-ma-none deckBtn">
         <wrapper class="fit"
           v-if="typeof feedBtn[i] !== 'undefined'"
           color="blue"
