@@ -26,7 +26,7 @@
             button-id="2"
             :is-active="status.mode.behavior==='fixed'"
             :is-visible="status.fixed.cameraObj"
-            style="width: 25%; position: absolute; top: 50%; left: 1%;">
+            style="width: 25%; position: absolute; top: 50%; left: 1%; background-color: white;">
             <video ref="cameraFeed" width="100%" :src="cameraSource">
             </video>
           </wrapper>
@@ -68,7 +68,8 @@
           color="pink"
           button-id="11"
           :is-active="status.mode.behavior==='fixed'"
-          :is-visible="status.fixed.layout==='cameraOnly'">
+          :is-visible="status.fixed.layout==='cameraOnly'"
+          style="background-color: white;">
           <video ref="cameraFeedOnly" width="100%" :src="cameraSource">
           </video>
         </wrapper>
@@ -79,7 +80,8 @@
           color="pink"
           button-id="12"
           :is-active="status.mode.behavior==='fixed'"
-          :is-visible="status.fixed.layout==='cameraMain'">
+          :is-visible="status.fixed.layout==='cameraMain'"
+          style="background-color: white;">
             <video ref="camera2" width="100%" :src="cameraSource">
             </video>
 
@@ -186,6 +188,8 @@ export default {
       this.$emit('started', stream)
     },
     loadCamera () {
+      if (process.env.DEV) return
+
       getUserMedia(Constraints, (err, stream) => {
         if (err) {
           this.$emit('error', err)
