@@ -24,7 +24,23 @@
 <script>
 export default {
   name: 'wrapper',
-  props: ['color', 'bgColor', 'buttonId', 'isButton', 'isVisible', 'isActive', 'isPending'],
+  props: {
+    'color': String,
+    'bgColor': String,
+    'buttonId': [String, Number],
+    'isButton': {
+      type: Boolean,
+      default: false
+    },
+    'isActive': {
+      type: Boolean,
+      default: true
+    },
+    'isVisible': {
+      type: Boolean,
+      default: true
+    }
+  },
   computed: {
     colorHex: function () {
       switch (this.color) {

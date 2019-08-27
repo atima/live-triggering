@@ -8,8 +8,9 @@
           :is-active="status.mode.behavior==='fixed'"
           :is-visible="status.fixed.layout==='gameMain'">
 
-          <video ref="gameFeed" width="100%" loop>
-            <source src="statics/game.mp4" type="video/mp4">
+          <video ref="gameFeed" width="100%" playsinline volume="0"
+            poster="statics/video-placeholder.png"
+            :src="gameStreamSrc">
           </video>
 
           <wrapper
@@ -26,8 +27,10 @@
             button-id="2"
             :is-active="status.mode.behavior==='fixed'"
             :is-visible="status.fixed.cameraObj"
-            style="width: 25%; position: absolute; top: 50%; left: 1%; background-color: white;">
-            <video ref="cameraFeed" width="100%" :src="cameraSource">
+            style="width: 25%; position: absolute; top: 50%; left: 1%;">
+            <video ref="cameraFeed" width="100%" playsinline
+              poster="statics/video-placeholder.png"
+              :src="cameraStreamSrc">
             </video>
           </wrapper>
 
@@ -57,8 +60,9 @@
           button-id="10"
           :is-active="status.mode.behavior==='fixed'"
           :is-visible="status.fixed.layout==='gameOnly'">
-          <video ref="gameFeedOnly" width="100%" loop>
-            <source src="statics/game.mp4" type="video/mp4">
+          <video ref="gameFeedOnly" width="100%"
+            poster="statics/video-placeholder.png"
+            :src="gameStreamSrc">
           </video>
         </wrapper>
       </template>
@@ -68,9 +72,10 @@
           color="pink"
           button-id="11"
           :is-active="status.mode.behavior==='fixed'"
-          :is-visible="status.fixed.layout==='cameraOnly'"
-          style="background-color: white;">
-          <video ref="cameraFeedOnly" width="100%" :src="cameraSource">
+          :is-visible="status.fixed.layout==='cameraOnly'">
+          <video ref="cameraFeedOnly" width="100%"
+            poster="statics/video-placeholder.png"
+            :src="cameraStreamSrc">
           </video>
         </wrapper>
       </template>
@@ -80,14 +85,15 @@
           color="pink"
           button-id="12"
           :is-active="status.mode.behavior==='fixed'"
-          :is-visible="status.fixed.layout==='cameraMain'"
-          style="background-color: white;">
-            <video ref="camera2" width="100%" :src="cameraSource">
+          :is-visible="status.fixed.layout==='cameraMain'">
+            <video ref="camera2" width="100%"
+              poster="statics/video-placeholder.png"
+              :src="cameraStreamSrc">
             </video>
 
-            <video ref="game2" width="30%" loop
-              style="position: absolute; top: 1%; left: 1%;">
-              <source src="statics/game.mp4" type="video/mp4">
+            <video ref="game2" width="30%" style="position: absolute; top: 1%; left: 1%;"
+              poster="statics/video-placeholder.png"
+              :src="gameStreamSrc">
             </video>
         </wrapper>
       </template>
@@ -103,19 +109,11 @@
 
 import Vue from 'vue'
 import VueChatScroll from 'vue-chat-scroll'
-import getUserMedia from 'getusermedia'
 Vue.use(VueChatScroll)
 
 import io from 'socket.io-client'
 import Wrapper from 'components/Wrapper'
 import Screen from 'components/Screen'
-
-const Constraints = {
-  video: {
-    width: 320,
-    height: 180
-  }
-}
 
 export default {
   name: 'PageIndex',
@@ -126,7 +124,8 @@ export default {
   data () {
     return {
       socket: {},
-      cameraSource: null,
+      gameStreamSrc: 'statics/game.mp4',
+      cameraStreamSrc: 'statics/camera.mp4',
       feedDataIndex: 0,
       feedData: [
         { name: 'Admin', message: 'Thank you for participating in this study.' },
@@ -168,36 +167,30 @@ export default {
     }
   },
   methods: {
-    loadSrcStream (stream) {
-      // Adapted from https://github.com/kelvin2go/vue-cam-vision/blob/master/src/webcam.vue
-      if ('srcObject' in this.$refs.cameraFeed) {
-        try {
-          this.$refs.cameraFeed.srcObject = stream
-          this.$refs.cameraFeedOnly.srcObject = stream
-          this.$refs.camera2.srcObject = stream
-        } catch (err) {
-          console.log(err)
-        }
-      } else {
-        // old broswers
-        this.source = window.HTMLMediaElement.srcObject(stream)
-      }
-
-      this.$refs.cameraFeed.play()
-      this.$refs.cameraFeedOnly.play()
-      this.$refs.camera2.play()
-      this.$emit('started', stream)
-    },
     loadCamera () {
-      if (process.env.DEV) return
+      // if (process.env.DEV) return
 
-      getUserMedia(Constraints, (err, stream) => {
-        if (err) {
-          this.$emit('error', err)
-          console.log('failed to get user camera')
-          return
-        }
-        this.loadSrcStream(stream)
+      navigator.mediaDevices.getUserMedia({
+        'video': { 'width': 320, 'height': 180 }
+      }).then(stream => {
+        this.$refs.cameraFeed.srcObject = stream
+        this.$refs.cameraFeedOnly.srcObject = stream
+        this.$refs.camera2.srcObject = stream
+      }, error => {
+        console.log('Unable to acquire webcam', error)
+      })
+    },
+    loadScreen: function () {
+      // if (process.env.DEV) return
+
+      navigator.mediaDevices.getDisplayMedia({
+        'video': { 'width': 640, 'height': 360 }
+      }).then(stream => {
+        this.$refs.gameFeed.srcObject = stream
+        this.$refs.gameFeedOnly.srcObject = stream
+        this.$refs.game2.srcObject = stream
+      }, error => {
+        console.log('Unable to acquire screen capture', error)
       })
     },
     loadFeed: function (feedDataIndex, feedBtnIndex, feedObjIndex) {
@@ -216,14 +209,28 @@ export default {
       this.$set(this.status['event'], feedBtnIndex, this.status.misc.autoShowComment)
     },
     start: function () {
-      this.$refs.gameFeed.play()
-      this.$refs.gameFeedOnly.play()
-      this.$refs.game2.play()
+      try {
+        this.$refs.gameFeed.play()
+        this.$refs.gameFeedOnly.play()
+        this.$refs.game2.play()
+        this.$refs.cameraFeed.play()
+        this.$refs.cameraFeedOnly.play()
+        this.$refs.camera2.play()
+      } catch (error) {
+        console.error(error)
+      }
     },
     stop: function () {
-      this.$refs.gameFeed.pause()
-      this.$refs.gameFeedOnly.pause()
-      this.$refs.game2.pause()
+      try {
+        this.$refs.gameFeed.pause()
+        this.$refs.gameFeedOnly.pause()
+        this.$refs.game2.pause()
+        this.$refs.cameraFeed.pause()
+        this.$refs.cameraFeedOnly.pause()
+        this.$refs.camera2.pause()
+      } catch (error) {
+        console.error(error)
+      }
     },
     setFeeding: function (feeding) {
       if (feeding) {
@@ -266,6 +273,7 @@ export default {
   },
   mounted () {
     // setInterval(this.loadFeed, 3000)
+    this.loadScreen()
     this.loadCamera()
     this.socket.on('message', this.trigger)
   }
