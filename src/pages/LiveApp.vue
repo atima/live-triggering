@@ -17,8 +17,8 @@
             button-id="1"
             :is-active="status.mode.behavior==='fixed'"
             :is-visible="status.fixed.logoObj"
-            style="width: 10%; height: 10%; position: absolute; top: 1%; right: 1%; background-color: white;">
-            Logo
+            style="width: 10%; position: absolute; top: 1%; right: 1%;">
+            <img src="assets/logo.svg" width="100%" />
           </wrapper>
 
           <wrapper
@@ -131,6 +131,7 @@ export default {
       feedData: [
         { name: 'Admin', message: 'Thank you for participating in this study.' },
         { name: 'Admin', message: 'Try following the order in this comment box.' },
+        { name: 'A', message: 'Click \'Event\' button to change category.' },
         { name: 'A', message: 'Click a button to remove this comment.' },
         { name: 'B', message: 'Click \'Fixed\' button to change category.' },
         { name: 'C', message: 'Click a button to hide camera from viewers.' },

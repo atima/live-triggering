@@ -1,5 +1,121 @@
 <template>
-  <q-page class="fit row">
+  <!-- Design A: type-based -->
+  <q-page v-if="$route.params.design==='A'" class="fit row">
+    <div v-if="status.mode.type==='comment'" class="objBtnTypeWrapper row">
+      <div v-for="i in 14" :key="i" class="q-btn q-pa-none q-ma-none deckBtn">
+        <wrapper class="fit"
+          v-if="typeof feedBtn[i] !== 'undefined'"
+          :bgColor="feedBtn[i].color"
+          :button-id="i"
+          :is-button="true"
+          :is-visible="status.event[i]"
+          @click.native="triggerEvent(i)">
+            Comment<br />
+            {{ feedBtn[i].name }}
+        </wrapper>
+
+        <q-btn v-else class="fit"></q-btn>
+      </div>
+
+      <q-btn class="deckBtn" @click.native="status.mode.type = true">Back</q-btn>
+    </div>
+
+    <div v-else-if="status.mode.type==='layout'" class="objBtnTypeWrapper row">
+      <wrapper class="deckBtn"
+        :is-button="true"
+        :is-visible="status.fixed.layout === 'gameMain'"
+        @click.native="trigger('fixed', 'layout', 'gameMain')">
+          Layout<br />
+          Default
+      </wrapper>
+
+      <wrapper class="deckBtn"
+        :is-button="true"
+        :is-visible="status.fixed.layout === 'gameOnly'"
+        @click.native="trigger('fixed', 'layout', 'gameOnly')">
+          Layout<br />
+          Game
+      </wrapper>
+
+      <wrapper class="deckBtn"
+        :is-button="true"
+        :is-visible="status.fixed.layout === 'cameraOnly'"
+        @click.native="trigger('fixed', 'layout', 'cameraOnly')">
+          Layout<br />
+          Camera
+      </wrapper>
+
+      <wrapper class="deckBtn"
+        :is-button="true"
+        :is-visible="status.fixed.layout === 'cameraMain'"
+        @click.native="trigger('fixed', 'layout', 'cameraMain')">
+          Layout<br />
+          Talk
+      </wrapper>
+
+      <q-btn v-for="i in 10" class="deckBtn" :key="i"></q-btn>
+      <q-btn class="deckBtn" @click.native="status.mode.type = true">Back</q-btn>
+    </div>
+
+    <div v-else class="objBtnTypeWrapper row">
+      <wrapper class="deckBtn"
+        :is-button="true"
+        :is-visible="status.misc.feeding"
+        @click.native="trigger('misc', 'feeding', !status.misc.feeding)">
+          Live
+      </wrapper>
+
+      <wrapper class="deckBtn"
+        :is-button="true"
+        :is-visible="status.misc.autoShowComment"
+        @click.native="trigger('misc', 'autoShowComment', !status.misc.autoShowComment)">
+          Auto Show Comment
+      </wrapper>
+
+      <wrapper class="deckBtn"
+        :is-button="true"
+        @click.native="status.mode.type = 'comment'">
+          Comment Items
+      </wrapper>
+
+      <wrapper class="deckBtn"
+        :is-button="true"
+        @click.native="status.mode.type = 'layout'">
+          Layout
+      </wrapper>
+
+      <q-btn class="deckBtn"></q-btn>
+
+      <wrapper class="deckBtn"
+        button-id="6"
+        :is-button="true"
+        :is-visible="status.fixed.logoObj"
+        @click.native="trigger('fixed', 'logoObj', !status.fixed.logoObj)">
+          Logo
+      </wrapper>
+
+      <wrapper class="deckBtn"
+        button-id="7"
+        :is-button="true"
+        :is-visible="status.fixed.cameraObj"
+        @click.native="trigger('fixed', 'cameraObj', !status.fixed.cameraObj)">
+          Camera
+      </wrapper>
+
+      <wrapper class="deckBtn"
+        button-id="8"
+        :is-button="true"
+        :is-visible="status.fixed.commentBoxObj"
+        @click.native="trigger('fixed', 'commentBoxObj', !status.fixed.commentBoxObj)">
+          Comment Box
+      </wrapper>
+
+      <q-btn v-for="i in 7" class="deckBtn" :key="i"></q-btn>
+    </div>
+  </q-page>
+
+  <!-- Design B: behaviour-based -->
+  <q-page v-else class="fit row">
     <div v-if="status.mode.behavior==='event'" class="objBtnWrapper row">
       <div v-for="i in 12" :key="i" class="q-btn q-pa-none q-ma-none deckBtn">
         <wrapper class="fit"
@@ -147,11 +263,11 @@ export default {
   data () {
     return {
       socket: {},
-      room: null,
       feedDataIndex: 0,
       feedData: [
         { name: 'Admin', message: 'Thank you for participating in this study.' },
         { name: 'Admin', message: 'Try following the order in this comment box.' },
+        { name: 'A', message: 'Click \'Event\' button to change category.' },
         { name: 'A', message: 'Click a button to remove this comment.' },
         { name: 'B', message: 'Click \'Fixed\' button to change category.' },
         { name: 'C', message: 'Click a button to hide camera from viewers.' },
@@ -169,7 +285,8 @@ export default {
       feedObjLightColor: true,
       status: {
         'mode': {
-          'behavior': 'misc'
+          'behavior': 'misc',
+          'type': true
         },
         'event': {},
         'fixed': {
@@ -183,6 +300,14 @@ export default {
           'autoShowComment': true
         }
       }
+    }
+  },
+  computed: {
+    room: function () {
+      return (this.$route.params.room) ? this.$route.params.room : 'default'
+    },
+    numOfButtons: function () {
+      return (this.status.mode.behavior) ? 12 : 14
     }
   },
   methods: {
@@ -204,7 +329,7 @@ export default {
       this.feedObjIndex++
 
       if (this.feedDataIndex === this.feedData.length) this.feedDataIndex = 0
-      if (this.feedBtnIndex > 12) {
+      if (this.feedBtnIndex > this.numOfButtons) {
         this.feedBtnIndex = 1
         this.feedObjLightColor = !this.feedObjLightColor
       }
@@ -222,7 +347,6 @@ export default {
       }
     },
     joinRoom: function () {
-      this.room = (this.$route.params.room) ? this.$route.params.room : 'default'
       this.socket.emit('room', this.room)
     }
   },
@@ -244,11 +368,17 @@ export default {
 .objBtnWrapper {
   width: 80%;
 }
+.objBtnTypeWrapper {
+  width: 100%;
+}
 .actionBtnWrapper {
   width: 20%;
 }
 .objBtnWrapper .deckBtn {
   width: 25%;
+}
+.objBtnTypeWrapper .deckBtn {
+  width: 20%;
 }
 .actionBtnWrapper .deckBtn {
   width: 100%;

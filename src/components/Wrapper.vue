@@ -65,4 +65,8 @@ export default {
   left: 50%;
   transform: translate(-50%, -50%);
 }
+.q-badge--floating {
+  top: 0px;
+  right: 0px;
+}
 </style>
