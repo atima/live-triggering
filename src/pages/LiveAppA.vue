@@ -4,12 +4,9 @@
       <div class="col" style="border: 1px solid blue">
         <video-wrapper ref="preview"
           :child-image="{ 'src': 'statics/logo.svg' }">
-          <comment-wrapper :comments="feedObj" :comment-props="{'isActive': true}">
+          <comment-wrapper v-if="this.status.fixed.layout==='gameMain'" :comments="feedObj" :comment-props="{'isActive': true}">
           </comment-wrapper>
         </video-wrapper>
-
-        <div v-if="!gameStream || !cameraStream">Loading</div>
-        <div v-else>{{ gameStream }}</div>
       </div>
       <div class="col" style="border: 1px solid blue">
 
@@ -92,14 +89,15 @@ export default {
       if (!this.cameraStream || !this.gameStream) {
         this.cameraStream = 'statics/camera.mp4'
         this.gameStream = 'statics/game.mp4'
-        // if (process.env.DEV) return
 
-        this.cameraStream = await navigator.mediaDevices.getUserMedia({
-          'video': { 'width': 320, 'height': 180 }
-        })
-        this.gameStream = await navigator.mediaDevices.getDisplayMedia({
-          'video': { 'width': 640, 'height': 360 }
-        })
+        if (!process.env.DEV) {
+          this.cameraStream = await navigator.mediaDevices.getUserMedia({
+            'video': { 'width': 320, 'height': 180 }
+          })
+          this.gameStream = await navigator.mediaDevices.getDisplayMedia({
+            'video': { 'width': 640, 'height': 360 }
+          })
+        }
       }
 
       switch (this.status.fixed.layout) {

@@ -63,8 +63,6 @@ export default {
       }
     },
     loadMainVideo: function (source) {
-      console.log('main' + source)
-
       var isPlaying = !this.$refs.mainFeed.paused
       if (isPlaying) this.$refs.mainFeed.pause()
 
@@ -86,7 +84,7 @@ export default {
       this.childVideo = childVideo
       this.$nextTick(function () {
         if (childVideo === null) {
-          console.log('empty child')
+          // console.log('empty child')
         } else if (typeof childVideo.source === 'string') {
           this.$refs.childFeed.srcObject = null
           this.$refs.childFeed.src = childVideo.source
