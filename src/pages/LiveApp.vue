@@ -19,7 +19,7 @@
             :is-active="status.mode.behavior==='fixed'"
             :is-visible="status.fixed.logoObj"
             style="width: 10%; position: absolute; top: 1%; right: 1%;">
-            <img src="assets/logo.svg" width="100%" />
+            <img src="statics/logo.svg" width="100%" />
           </wrapper>
 
           <wrapper
@@ -168,7 +168,7 @@ export default {
   },
   methods: {
     loadCamera () {
-      // if (process.env.DEV) return
+      if (process.env.DEV) return
 
       navigator.mediaDevices.getUserMedia({
         'video': { 'width': 320, 'height': 180 }
@@ -181,7 +181,7 @@ export default {
       })
     },
     loadScreen: function () {
-      // if (process.env.DEV) return
+      if (process.env.DEV) return
 
       navigator.mediaDevices.getDisplayMedia({
         'video': { 'width': 640, 'height': 360 }
@@ -272,7 +272,6 @@ export default {
     this.socket.on('connect', this.joinRoom)
   },
   mounted () {
-    // setInterval(this.loadFeed, 3000)
     this.loadScreen()
     this.loadCamera()
     this.socket.on('message', this.trigger)
