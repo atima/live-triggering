@@ -34,7 +34,7 @@ export default {
     },
     'isActive': {
       type: Boolean,
-      default: true
+      default: false
     },
     'isVisible': {
       type: Boolean,
