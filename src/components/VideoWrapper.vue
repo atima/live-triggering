@@ -17,7 +17,7 @@
       <img :src="childImage.src" width="100%" />
     </wrapper>
 
-    <wrapper v-if="childVideo"
+    <wrapper v-if="childVideo && childSource"
       :color="childVideo.color"
       :button-id="childVideo.buttonId"
       :is-active="childVideo.isActive"
@@ -39,10 +39,17 @@ export default {
   components: {
     Wrapper
   },
-  props: ['color', 'buttonId', 'isActive', 'isVisible', 'childImage'],
-  data: function () {
+  props: ['color', 'buttonId', 'isActive', 'isVisible', 'childImage', 'childVideo'],
+  data () {
     return {
-      'childVideo': null
+      'childSource': null
+    }
+  },
+  watch: {
+    childVideo: function (newChild, oldChild) {
+      if (oldChild === null && newChild !== null) {
+        this.loadChildVideo(this.childSource)
+      }
     }
   },
   methods: {
@@ -62,6 +69,10 @@ export default {
         console.error(error)
       }
     },
+    load: function (main, child) {
+      this.loadMainVideo(main)
+      this.loadChildVideo(child)
+    },
     loadMainVideo: function (source) {
       var isPlaying = !this.$refs.mainFeed.paused
       if (isPlaying) this.$refs.mainFeed.pause()
@@ -78,24 +89,24 @@ export default {
 
       if (isPlaying) this.$refs.mainFeed.play()
     },
-    loadChildVideo: function (childVideo) {
+    loadChildVideo: function (source) {
+      this.childSource = source
       if (this.$refs.childFeed && !this.$refs.childFeed.paused) this.$refs.childFeed.pause()
 
-      this.childVideo = childVideo
       this.$nextTick(function () {
-        if (childVideo === null) {
-          // console.log('empty child')
-        } else if (typeof childVideo.source === 'string') {
+        if (!this.$refs.childFeed) return
+
+        if (typeof source === 'string') {
           this.$refs.childFeed.srcObject = null
-          this.$refs.childFeed.src = childVideo.source
+          this.$refs.childFeed.src = source
           this.$refs.childFeed.loop = true
         } else {
           this.$refs.childFeed.src = null
-          this.$refs.childFeed.srcObject = childVideo.source
+          this.$refs.childFeed.srcObject = source
           this.$refs.childFeed.loop = false
         }
 
-        if (!this.$refs.mainFeed.paused && childVideo) this.$refs.childFeed.play()
+        if (!this.$refs.mainFeed.paused) this.$refs.childFeed.play()
       })
     }
   }

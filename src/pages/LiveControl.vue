@@ -2,7 +2,7 @@
   <!-- Design A: type-based -->
   <q-page v-if="$route.params.design==='A'" class="fit row">
     <div v-if="status.mode.type==='comment'" class="objBtnTypeWrapper row">
-      <div v-for="i in 14" :key="i" class="q-btn q-pa-none q-ma-none deckBtn">
+      <div v-for="i in numOfButtons" :key="i" class="q-btn q-pa-none q-ma-none deckBtn">
         <wrapper class="fit"
           v-if="typeof feedBtn[i] !== 'undefined'"
           :bgColor="feedBtn[i].color"
@@ -74,12 +74,14 @@
 
       <wrapper class="deckBtn"
         :is-button="true"
+        :is-visible="false"
         @click.native="status.mode.type = 'comment'">
           Comment Items
       </wrapper>
 
       <wrapper class="deckBtn"
         :is-button="true"
+        :is-visible="false"
         @click.native="status.mode.type = 'layout'">
           Layout
       </wrapper>
@@ -87,7 +89,6 @@
       <q-btn class="deckBtn"></q-btn>
 
       <wrapper class="deckBtn"
-        button-id="6"
         :is-button="true"
         :is-visible="status.fixed.logoObj"
         @click.native="trigger('fixed', 'logoObj', !status.fixed.logoObj)">
@@ -95,7 +96,6 @@
       </wrapper>
 
       <wrapper class="deckBtn"
-        button-id="7"
         :is-button="true"
         :is-visible="status.fixed.cameraObj"
         @click.native="trigger('fixed', 'cameraObj', !status.fixed.cameraObj)">
@@ -103,7 +103,6 @@
       </wrapper>
 
       <wrapper class="deckBtn"
-        button-id="8"
         :is-button="true"
         :is-visible="status.fixed.commentBoxObj"
         @click.native="trigger('fixed', 'commentBoxObj', !status.fixed.commentBoxObj)">
@@ -117,7 +116,7 @@
   <!-- Design B: behaviour-based -->
   <q-page v-else class="fit row">
     <div v-if="status.mode.behavior==='event'" class="objBtnWrapper row">
-      <div v-for="i in 12" :key="i" class="q-btn q-pa-none q-ma-none deckBtn">
+      <div v-for="i in numOfButtons" :key="i" class="q-btn q-pa-none q-ma-none deckBtn">
         <wrapper class="fit"
           v-if="typeof feedBtn[i] !== 'undefined'"
           color="blue"
@@ -285,8 +284,7 @@ export default {
       feedObjLightColor: true,
       status: {
         'mode': {
-          'behavior': 'misc',
-          'type': true
+          'behavior': 'misc'
         },
         'event': {},
         'fixed': {
@@ -359,6 +357,11 @@ export default {
     this.socket.on('connect', this.joinRoom)
   },
   mounted () {
+    if (this.$route.params.design === 'A') {
+      this.status.mode = { 'type': true }
+    } else {
+      this.status.mode = { 'behavior': 'misc' }
+    }
     setInterval(this.loadFeed, 3000)
   }
 }

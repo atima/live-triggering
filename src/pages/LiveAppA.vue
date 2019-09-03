@@ -1,20 +1,26 @@
 <template>
-  <q-page class="column bg-grey-10">
-    <div class="row" style="border: 1px solid red">
-      <div class="col" style="border: 1px solid blue">
+  <q-page class="bg-grey-10">
+    <div class="row">
+      <div class="col q-ma-xs">
+        <div class="text-white">Preview</div>
         <video-wrapper ref="preview"
-          :child-image="{ 'src': 'statics/logo.svg' }">
-          <comment-wrapper v-if="this.status.fixed.layout==='gameMain'" :comments="feedObj" :comment-props="{'isActive': true}">
+          :child-image="(statusPreview.fixed.logoObj) ? { 'src': 'statics/logo.svg' } : null"
+          :child-video="(statusPreview.fixed.cameraObj) ? { 'isVisible': true } : null">
+          <comment-wrapper v-if="this.statusPreview.fixed.layout==='gameMain' && statusPreview.fixed.commentBoxObj"
+            :comments="feedObjPreview" :comment-props="{'isActive': true}">
           </comment-wrapper>
         </video-wrapper>
       </div>
-      <div class="col" style="border: 1px solid blue">
-
+      <div class="col q-ma-xs">
+        <div class="text-white">Live</div>
+        <video-wrapper ref="live"
+          :child-image="(statusLive.fixed.logoObj) ? { 'src': 'statics/logo.svg' } : null"
+          :child-video="(statusLive.fixed.cameraObj) ? { 'isVisible': true } : null">
+          <comment-wrapper v-if="this.statusLive.fixed.layout==='gameMain' && statusLive.fixed.commentBoxObj"
+            :comments="feedObjLive" :comment-props="{'isActive': true}">
+          </comment-wrapper>
+        </video-wrapper>
       </div>
-    </div>
-    <div class="col" style="border: 1px solid red">
-
-      *****
     </div>
   </q-page>
 </template>
@@ -28,22 +34,19 @@
 import io from 'socket.io-client'
 import VideoWrapper from 'components/VideoWrapper'
 import CommentWrapper from 'components/CommentWrapper'
-// import Wrapper from 'components/Wrapper'
-// import Screen from 'components/Screen'
 
 export default {
   name: 'PageIndex',
   components: {
     VideoWrapper,
     CommentWrapper
-    // Wrapper,
-    // Screen
   },
   data () {
     return {
       socket: {},
       gameStream: null,
       cameraStream: null,
+      delay: 3000, // ms
       feedDataIndex: 0,
       feedData: [
         { name: 'Admin', message: 'Thank you for participating in this study.' },
@@ -61,13 +64,50 @@ export default {
         { name: 'H', message: 'End.' }
       ],
       feedObj: {},
+      feedObjPreview: {},
+      feedObjLive: {},
       feedBtnMapping: {
         // buttonId: objectId
       },
-      status: {
+      statusPreview: {
         'mode': {
           'behavior': 'misc'
         },
+        'event': {
+          // buttonId: visibility
+        },
+        'fixed': {
+          'logoObj': true,
+          'cameraObj': true,
+          'commentBoxObj': true,
+          'layout': 'gameMain'
+        },
+        'misc': {
+          'feeding': false,
+          'autoShowComment': true
+        }
+      },
+      statusLive: {
+        'mode': {
+          'behavior': 'misc'
+        },
+        'event': {
+          // buttonId: visibility
+        },
+        'fixed': {
+          'logoObj': true,
+          'cameraObj': true,
+          'commentBoxObj': true,
+          'layout': 'gameMain'
+        },
+        'misc': {
+          'feeding': false,
+          'autoShowComment': true
+        }
+      },
+      statusTimeout: {
+        'create-event': {},
+        'delete-event': {},
         'event': {
           // buttonId: visibility
         },
@@ -85,7 +125,7 @@ export default {
     }
   },
   methods: {
-    async loadVideo () {
+    async loadVideo (status, ref) {
       if (!this.cameraStream || !this.gameStream) {
         this.cameraStream = 'statics/camera.mp4'
         this.gameStream = 'statics/game.mp4'
@@ -100,65 +140,62 @@ export default {
         }
       }
 
-      switch (this.status.fixed.layout) {
+      switch (status.fixed.layout) {
         case 'gameMain':
-          this.$refs.preview.loadMainVideo(this.gameStream)
-          this.$refs.preview.loadChildVideo({ 'source': this.cameraStream })
+          ref.load(this.gameStream, this.cameraStream)
           break
         case 'gameOnly':
-          this.$refs.preview.loadMainVideo(this.gameStream)
-          this.$refs.preview.loadChildVideo(null)
+          ref.load(this.gameStream)
           break
         case 'cameraOnly':
-          this.$refs.preview.loadMainVideo(this.cameraStream)
-          this.$refs.preview.loadChildVideo(null)
+          ref.load(this.cameraStream)
           break
         default:
-          this.$refs.preview.loadMainVideo(this.cameraStream)
-          this.$refs.preview.loadChildVideo({ 'source': this.gameStream })
+          ref.load(this.cameraStream, this.gameStream)
       }
     },
-    loadFeed: function (feedDataIndex, feedBtnIndex, feedObjIndex) {
-      var data = JSON.parse(JSON.stringify(this.feedData[feedDataIndex])) // clone object
-      data.btnIndex = feedBtnIndex
-      data.objIndex = feedObjIndex
-
-      // Reuse the button. Clear the number from the existing object.
-      if (typeof this.feedBtnMapping[feedBtnIndex] !== 'undefined') {
-        var removeBtnIndexFrom = this.feedBtnMapping[feedBtnIndex]
-        this.$delete(this.feedObj[removeBtnIndexFrom], 'btnIndex')
-      }
-
-      this.$set(this.feedBtnMapping, feedBtnIndex, feedObjIndex)
-      this.$set(this.feedObj, feedObjIndex, data)
-      this.$set(this.status['event'], feedBtnIndex, this.status.misc.autoShowComment)
-    },
-    setFeeding: function (feeding) {
-      if (feeding) {
-        this.$refs.preview.play()
-      } else {
-        this.$refs.preview.pause()
-      }
-    },
-    trigger: function (message) {
-      if (message.type === 'create-event') {
-        this.loadFeed(message.feedDataIndex, message.feedBtnIndex, message.feedObjIndex)
-        return
-      } else if (message.type === 'delete-event') {
-        var objIndex = this.feedBtnMapping[message.id]
-        this.$delete(this.status['event'], message.id)
-        this.$delete(this.feedBtnMapping, message.id)
-        this.$delete(this.feedObj, objIndex)
-        return
-      }
+    trigger: function (message, isLive = false) {
+      var data
+      var status = (isLive) ? this.statusLive : this.statusPreview
+      var obj = (isLive) ? this.feedObjLive : this.feedObjPreview
+      var ref = (isLive) ? this.$refs.live : this.$refs.preview
 
       var value = (message.value === 'true') ? true : (message.value === 'false') ? false : message.value
-      this.$set(this.status[message.type], message.id, value)
+      if (status[message.type]) this.$set(status[message.type], message.id, value)
 
-      if (message.type === 'misc' && message.id === 'feeding') {
-        this.setFeeding(value)
+      if (message.type === 'event') {
+        data = JSON.parse(JSON.stringify(this.feedObj[message.id]))
+        this.$set(obj, message.id, data)
+      } else if (message.type === 'create-event') {
+        data = JSON.parse(JSON.stringify(this.feedData[message.feedDataIndex])) // clone object
+        data.objIndex = message.feedObjIndex
+        this.$set(this.feedBtnMapping, message.feedBtnIndex, message.feedObjIndex)
+        this.$set(this.feedObj, message.feedObjIndex, data)
+        if (status.misc.autoShowComment) this.$set(obj, message.feedObjIndex, data)
+      } else if (message.type === 'delete-event') {
+        var objIndex = this.feedBtnMapping[message.id]
+        this.$delete(status['event'], message.id)
+        this.$delete(this.feedBtnMapping, message.id)
+        this.$delete(this.feedObj, objIndex)
+        this.$delete(obj, objIndex)
+      } else if (message.type === 'misc' && message.id === 'feeding') {
+        if (value) {
+          ref.play()
+        } else {
+          ref.pause()
+        }
       } else if (message.type === 'fixed' && message.id === 'layout') {
-        this.loadVideo()
+        this.loadVideo(status, ref)
+      }
+
+      if (!isLive) {
+        var that = this
+        this.statusTimeout[message.type][message.id] = setTimeout(function () {
+          that.trigger(message, true)
+        }, this.delay)
+      } else {
+        clearTimeout(this.statusTimeout[message.type][message.id])
+        this.$delete(this.statusTimeout[message.type], message.id)
       }
     },
     joinRoom: function () {
@@ -175,7 +212,8 @@ export default {
     this.socket.on('connect', this.joinRoom)
   },
   mounted () {
-    this.loadVideo()
+    this.loadVideo(this.statusPreview, this.$refs.preview)
+    this.loadVideo(this.statusLive, this.$refs.live)
     this.socket.on('message', this.trigger)
   }
 }
