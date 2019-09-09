@@ -1,5 +1,6 @@
 <template>
   <wrapper class="relative-position"
+    :id="id"
     :color="color"
     :button-id="buttonId"
     :is-active="isActive"
@@ -9,6 +10,7 @@
     </video>
 
     <wrapper v-if="childImage"
+      :id="childImage.id"
       :color="childImage.color"
       :button-id="childImage.buttonId"
       :is-active="childImage.isActive"
@@ -18,6 +20,7 @@
     </wrapper>
 
     <wrapper v-if="childVideo && childSource"
+      :id="childVideo.id"
       :color="childVideo.color"
       :button-id="childVideo.buttonId"
       :is-active="childVideo.isActive"
@@ -39,7 +42,7 @@ export default {
   components: {
     Wrapper
   },
-  props: ['color', 'buttonId', 'isActive', 'isVisible', 'childImage', 'childVideo'],
+  props: ['id', 'color', 'buttonId', 'isActive', 'isVisible', 'childImage', 'childVideo'],
   data () {
     return {
       'childSource': null

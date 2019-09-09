@@ -1,25 +1,35 @@
 <template>
   <q-page class="bg-grey-10">
-    <div class="row">
-      <div class="col q-ma-xs">
-        <div class="text-white">Preview</div>
-        <video-wrapper ref="preview"
-          :child-image="(statusPreview.fixed.logoObj) ? { 'src': 'statics/logo.svg' } : null"
-          :child-video="(statusPreview.fixed.cameraObj) ? { 'isVisible': true } : null">
-          <comment-wrapper v-if="this.statusPreview.fixed.layout==='gameMain' && statusPreview.fixed.commentBoxObj"
-            :comments="feedObjPreview" :comment-props="{'isActive': true}">
-          </comment-wrapper>
-        </video-wrapper>
+    <div class="column">
+      <div class="row">
+        <div class="col q-ma-xs">
+          <div class="text-white">Preview</div>
+          <video-wrapper ref="preview"
+            id="fixedlayout"
+            :child-image="(statusPreview.fixed.logoObj) ? { 'id': 'fixedlogoObj', 'src': 'statics/logo.svg' } : null"
+            :child-video="(statusPreview.fixed.cameraObj) ? { 'id': 'fixedcameraObj', 'isVisible': true } : null">
+            <comment-wrapper v-if="this.statusPreview.fixed.layout==='gameMain' && statusPreview.fixed.commentBoxObj"
+              id="fixedcommentBoxObj"
+              :comments="feedObjPreview" :comment-props="{'isActive': true}">
+            </comment-wrapper>
+          </video-wrapper>
+        </div>
+        <div class="col q-ma-xs">
+          <div class="text-white">Live</div>
+          <video-wrapper ref="live"
+            :child-image="(statusLive.fixed.logoObj) ? { 'src': 'statics/logo.svg' } : null"
+            :child-video="(statusLive.fixed.cameraObj) ? { 'isVisible': true } : null">
+            <comment-wrapper v-if="this.statusLive.fixed.layout==='gameMain' && statusLive.fixed.commentBoxObj"
+              :comments="feedObjLive" :comment-props="{'isActive': true}">
+            </comment-wrapper>
+          </video-wrapper>
+        </div>
       </div>
-      <div class="col q-ma-xs">
-        <div class="text-white">Live</div>
-        <video-wrapper ref="live"
-          :child-image="(statusLive.fixed.logoObj) ? { 'src': 'statics/logo.svg' } : null"
-          :child-video="(statusLive.fixed.cameraObj) ? { 'isVisible': true } : null">
-          <comment-wrapper v-if="this.statusLive.fixed.layout==='gameMain' && statusLive.fixed.commentBoxObj"
-            :comments="feedObjLive" :comment-props="{'isActive': true}">
-          </comment-wrapper>
-        </video-wrapper>
+      <div v-if="false" class="col q-ma-xs">
+        <div class="text-white"
+          v-for="item in feedObj" :key="item.objIndex">
+          <strong>{{ item.name }}</strong>: {{ item.message }}
+        </div>
       </div>
     </div>
   </q-page>
@@ -34,6 +44,7 @@
 import io from 'socket.io-client'
 import VideoWrapper from 'components/VideoWrapper'
 import CommentWrapper from 'components/CommentWrapper'
+import { timerstore, timerfunc } from '../store/timers.js'
 
 export default {
   name: 'PageIndex',
@@ -46,7 +57,6 @@ export default {
       socket: {},
       gameStream: null,
       cameraStream: null,
-      delay: 3000, // ms
       feedDataIndex: 0,
       feedData: [
         { name: 'Admin', message: 'Thank you for participating in this study.' },
@@ -104,23 +114,6 @@ export default {
           'feeding': false,
           'autoShowComment': true
         }
-      },
-      statusTimeout: {
-        'create-event': {},
-        'delete-event': {},
-        'event': {
-          // buttonId: visibility
-        },
-        'fixed': {
-          'logoObj': true,
-          'cameraObj': true,
-          'commentBoxObj': true,
-          'layout': 'gameMain'
-        },
-        'misc': {
-          'feeding': false,
-          'autoShowComment': true
-        }
       }
     }
   },
@@ -164,14 +157,14 @@ export default {
       if (status[message.type]) this.$set(status[message.type], message.id, value)
 
       if (message.type === 'event') {
-        data = JSON.parse(JSON.stringify(this.feedObj[message.id]))
+        var objId = this.feedBtnMapping[message.id]
+        data = JSON.parse(JSON.stringify(this.feedObj[objId]))
         this.$set(obj, message.id, data)
       } else if (message.type === 'create-event') {
         data = JSON.parse(JSON.stringify(this.feedData[message.feedDataIndex])) // clone object
-        data.objIndex = message.feedObjIndex
-        this.$set(this.feedBtnMapping, message.feedBtnIndex, message.feedObjIndex)
-        this.$set(this.feedObj, message.feedObjIndex, data)
-        if (status.misc.autoShowComment) this.$set(obj, message.feedObjIndex, data)
+        data.objIndex = message.id
+        this.$set(this.feedBtnMapping, message.feedBtnIndex, message.id)
+        this.$set(this.feedObj, message.id, data)
       } else if (message.type === 'delete-event') {
         var objIndex = this.feedBtnMapping[message.id]
         this.$delete(status['event'], message.id)
@@ -182,20 +175,19 @@ export default {
         if (value) {
           ref.play()
         } else {
-          ref.pause()
+          setTimeout(function () { // hack. waiting for dom to update, i guess
+            ref.pause()
+          }, 1000)
         }
       } else if (message.type === 'fixed' && message.id === 'layout') {
-        this.loadVideo(status, ref)
+        var that = this
+        setTimeout(function () { // hack. waiting for dom to update, i guess
+          that.loadVideo(status, ref)
+        }, 1000)
       }
 
       if (!isLive) {
-        var that = this
-        this.statusTimeout[message.type][message.id] = setTimeout(function () {
-          that.trigger(message, true)
-        }, this.delay)
-      } else {
-        clearTimeout(this.statusTimeout[message.type][message.id])
-        this.$delete(this.statusTimeout[message.type], message.id)
+        timerfunc.countdown(message.type + message.id, true, this.trigger, message, true)
       }
     },
     joinRoom: function () {
@@ -215,10 +207,10 @@ export default {
     this.loadVideo(this.statusPreview, this.$refs.preview)
     this.loadVideo(this.statusLive, this.$refs.live)
     this.socket.on('message', this.trigger)
+    timerstore.delay = 3000
   }
 }
 </script>
 
 <style>
-
 </style>

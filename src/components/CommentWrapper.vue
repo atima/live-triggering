@@ -1,5 +1,6 @@
 <template>
   <wrapper
+    :id="id"
     :color="color"
     :button-id="buttonId"
     :is-active="isActive"
@@ -7,6 +8,7 @@
     :style="(customStyle) ? customStyle : 'width: 30%; height: 40%; position: absolute;top: 30%; right: 1%;'">
     <div v-chat-scroll="{always: true, scrollonremoved:true}" class="commentBox">
       <wrapper v-for="item in comments" :key="item.objIndex"
+        :id="'event' + item.objIndex"
         :color="commentProps.color"
         :button-id="item.btnIndex"
         :is-active="commentProps.isActive"
@@ -30,7 +32,7 @@ export default {
   components: {
     Wrapper
   },
-  props: ['color', 'buttonId', 'isActive', 'isVisible', 'customStyle', 'comments', 'commentProps'],
+  props: ['id', 'color', 'buttonId', 'isActive', 'isVisible', 'customStyle', 'comments', 'commentProps'],
   computed: {
   },
   data: function () {
@@ -50,6 +52,7 @@ export default {
   background-color: white;
   overflow-x: hidden;
   overflow-y: scroll;
+  font-size: 1.5vh;
 }
 .commentBox::-webkit-scrollbar {
   width: 5px;

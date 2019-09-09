@@ -4,27 +4,32 @@
     :color="bgColor" text-color="black"
     :style="{ 'border-color': colorHex }">
     <q-badge v-if="buttonId" :color="color" floating transparent>{{ buttonId }}</q-badge>
-    <q-icon v-if="isVisible" name="check_circle" class="status" size="40px" color="green-4" />
+    <div class="status" v-if="isVisible && getRamainingTime(id) > 0">{{ getRamainingTime(id) }}</div>
+    <q-icon v-else-if="isVisible" name="check_circle" class="status" />
+
     <slot></slot>
   </q-btn>
 
   <div v-else-if="isActive && buttonId"
-    class="wrapper shadow-3" :class="{ 'visible': isVisible }"
+    class="wrapper shadow-3" :class="{ 'visible': isVisible, 'highlight': getRamainingTime(id) > 0 }"
     :style="{ 'border-color': colorHex }">
     <q-badge :color="color" floating transparent>{{ buttonId }}</q-badge>
     <slot></slot>
   </div>
 
   <div v-else class="wrapper"
-    :class="{ 'visible': isVisible, 'fade': !isVisible }">
+    :class="{ 'visible': isVisible, 'fade': !isVisible, 'highlight': getRamainingTime(id) > 0 }">
     <slot></slot>
   </div>
 </template>
 
 <script>
+import { timerfunc } from '../store/timers.js'
+
 export default {
   name: 'wrapper',
   props: {
+    'id': String,
     'color': String,
     'bgColor': String,
     'buttonId': [String, Number],
@@ -55,11 +60,8 @@ export default {
       }
     }
   },
-  data: function () {
-    return {
-    }
-  },
   methods: {
+    getRamainingTime: timerfunc.getRamainingTime
   }
 }
 </script>
@@ -80,9 +82,20 @@ export default {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  font-size: 40px;
+}
+.q-btn .q-icon {
+  font-size: 40px;
 }
 .q-badge--floating {
   top: 0px;
   right: 0px;
 }
+</style>
+
+<style lang="stylus">
+.status
+  color $green-4
+.highlight
+  border-color $red
 </style>

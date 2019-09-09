@@ -5,6 +5,7 @@
       <div v-for="i in numOfButtons" :key="i" class="q-btn q-pa-none q-ma-none deckBtn">
         <wrapper class="fit"
           v-if="typeof feedBtn[i] !== 'undefined'"
+          :id="'event' + feedBtn[i].objIndex"
           :bgColor="feedBtn[i].color"
           :button-id="i"
           :is-button="true"
@@ -22,6 +23,7 @@
 
     <div v-else-if="status.mode.type==='layout'" class="objBtnTypeWrapper row">
       <wrapper class="deckBtn"
+        id="fixedlayout"
         :is-button="true"
         :is-visible="status.fixed.layout === 'gameMain'"
         @click.native="trigger('fixed', 'layout', 'gameMain')">
@@ -30,6 +32,7 @@
       </wrapper>
 
       <wrapper class="deckBtn"
+        id="fixedlayout"
         :is-button="true"
         :is-visible="status.fixed.layout === 'gameOnly'"
         @click.native="trigger('fixed', 'layout', 'gameOnly')">
@@ -38,6 +41,7 @@
       </wrapper>
 
       <wrapper class="deckBtn"
+        id="fixedlayout"
         :is-button="true"
         :is-visible="status.fixed.layout === 'cameraOnly'"
         @click.native="trigger('fixed', 'layout', 'cameraOnly')">
@@ -46,6 +50,7 @@
       </wrapper>
 
       <wrapper class="deckBtn"
+        id="fixedlayout"
         :is-button="true"
         :is-visible="status.fixed.layout === 'cameraMain'"
         @click.native="trigger('fixed', 'layout', 'cameraMain')">
@@ -59,6 +64,7 @@
 
     <div v-else class="objBtnTypeWrapper row">
       <wrapper class="deckBtn"
+        id="miscfeeding"
         :is-button="true"
         :is-visible="status.misc.feeding"
         @click.native="trigger('misc', 'feeding', !status.misc.feeding)">
@@ -66,6 +72,7 @@
       </wrapper>
 
       <wrapper class="deckBtn"
+        id="miscautoShowComment"
         :is-button="true"
         :is-visible="status.misc.autoShowComment"
         @click.native="trigger('misc', 'autoShowComment', !status.misc.autoShowComment)">
@@ -89,6 +96,7 @@
       <q-btn class="deckBtn"></q-btn>
 
       <wrapper class="deckBtn"
+        id="fixedlogoObj"
         :is-button="true"
         :is-visible="status.fixed.logoObj"
         @click.native="trigger('fixed', 'logoObj', !status.fixed.logoObj)">
@@ -96,6 +104,7 @@
       </wrapper>
 
       <wrapper class="deckBtn"
+        id="fixedcameraObj"
         :is-button="true"
         :is-visible="status.fixed.cameraObj"
         @click.native="trigger('fixed', 'cameraObj', !status.fixed.cameraObj)">
@@ -103,6 +112,7 @@
       </wrapper>
 
       <wrapper class="deckBtn"
+        id="fixedcommentBoxObj"
         :is-button="true"
         :is-visible="status.fixed.commentBoxObj"
         @click.native="trigger('fixed', 'commentBoxObj', !status.fixed.commentBoxObj)">
@@ -253,6 +263,7 @@
 
 import io from 'socket.io-client'
 import Wrapper from 'components/Wrapper'
+import { timerstore, timerfunc } from '../store/timers.js'
 
 export default {
   name: 'PageIndex',
@@ -309,18 +320,24 @@ export default {
     }
   },
   methods: {
+    getEventId: function (feedBtnIndex) {
+      return (this.status.event[feedBtnIndex]) ? 'delete-event' + feedBtnIndex : 'event' + feedBtnIndex
+    },
     loadFeed: function () {
       if (!this.status.misc.feeding) return
 
       var data = JSON.parse(JSON.stringify(this.feedData[this.feedDataIndex])) // clone object
+      data.objIndex = this.feedObjIndex
       data.color = (this.feedObjLightColor) ? 'white' : 'blue-1'
 
       this.$set(this.feedBtn, this.feedBtnIndex, data)
       this.$set(this.status['event'], this.feedBtnIndex, this.status.misc.autoShowComment)
 
       this.socket.emit('message', {
-        'room': this.room, 'type': 'create-event', 'feedDataIndex': this.feedDataIndex, 'feedBtnIndex': this.feedBtnIndex, 'feedObjIndex': this.feedObjIndex
+        'room': this.room, 'type': 'create-event', 'id': this.feedObjIndex, 'feedDataIndex': this.feedDataIndex, 'feedBtnIndex': this.feedBtnIndex
       })
+      timerfunc.countdown('create-event' + this.feedObjIndex, true)
+      if (this.status.misc.autoShowComment) this.trigger('event', this.feedBtnIndex, true)
 
       this.feedDataIndex++
       this.feedBtnIndex++
@@ -335,11 +352,13 @@ export default {
     trigger: function (type, id, value) {
       this.$set(this.status[type], id, value)
       this.socket.emit('message', { 'room': this.room, 'type': type, 'id': id, 'value': value })
+      timerfunc.countdown(type + id, true)
     },
     triggerEvent: function (btnIndex) {
       if (this.status.event[btnIndex]) {
         this.$delete(this.feedBtn, btnIndex)
         this.socket.emit('message', { 'room': this.room, 'type': 'delete-event', 'id': btnIndex })
+        timerfunc.countdown('delete-event' + btnIndex, true)
       } else {
         this.trigger('event', btnIndex, true)
       }
@@ -362,7 +381,8 @@ export default {
     } else {
       this.status.mode = { 'behavior': 'misc' }
     }
-    setInterval(this.loadFeed, 3000)
+    setInterval(this.loadFeed, 5000)
+    timerstore.delay = 3000
   }
 }
 </script>
