@@ -7,7 +7,6 @@
           v-if="typeof feedBtn[i] !== 'undefined'"
           :id="'event' + feedBtn[i].objIndex"
           :bgColor="feedBtn[i].color"
-          :button-id="i"
           :is-button="true"
           :is-visible="status.event[i]"
           @click.native="triggerEvent(i)">
@@ -378,11 +377,11 @@ export default {
   mounted () {
     if (this.$route.params.design === 'A') {
       this.status.mode = { 'type': true }
+      timerstore.delay = 3000
     } else {
       this.status.mode = { 'behavior': 'misc' }
     }
     setInterval(this.loadFeed, 5000)
-    timerstore.delay = 3000
   }
 }
 </script>

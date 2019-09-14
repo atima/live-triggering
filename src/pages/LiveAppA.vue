@@ -25,10 +25,18 @@
           </video-wrapper>
         </div>
       </div>
-      <div v-if="false" class="col q-ma-xs">
+      <div v-if="!statusPreview.misc.autoShowComment" class="col q-ma-xs"
+        style="max-height: 100px; overflow-y: scroll;"
+        v-chat-scroll="{always: true, scrollonremoved:true}">
         <div class="text-white"
           v-for="item in feedObj" :key="item.objIndex">
           <strong>{{ item.name }}</strong>: {{ item.message }}
+          <div class="status-inline" v-if="feedObjPreview[item.objIndex]">
+            <span v-if="getRamainingTime('event' + item.objIndex) > 0">
+              {{ getRamainingTime('event' + item.objIndex) }}
+            </span>
+            <q-icon v-else name="check_circle" />
+          </div>
         </div>
       </div>
     </div>
@@ -42,6 +50,10 @@
  */
 
 import io from 'socket.io-client'
+import Vue from 'vue'
+import VueChatScroll from 'vue-chat-scroll'
+Vue.use(VueChatScroll)
+
 import VideoWrapper from 'components/VideoWrapper'
 import CommentWrapper from 'components/CommentWrapper'
 import { timerstore, timerfunc } from '../store/timers.js'
@@ -118,6 +130,7 @@ export default {
     }
   },
   methods: {
+    getRamainingTime: timerfunc.getRamainingTime,
     async loadVideo (status, ref) {
       if (!this.cameraStream || !this.gameStream) {
         this.cameraStream = 'statics/camera.mp4'
@@ -148,7 +161,7 @@ export default {
       }
     },
     trigger: function (message, isLive = false) {
-      var data
+      var data, objIndex
       var status = (isLive) ? this.statusLive : this.statusPreview
       var obj = (isLive) ? this.feedObjLive : this.feedObjPreview
       var ref = (isLive) ? this.$refs.live : this.$refs.preview
@@ -156,21 +169,27 @@ export default {
       var value = (message.value === 'true') ? true : (message.value === 'false') ? false : message.value
       if (status[message.type]) this.$set(status[message.type], message.id, value)
 
-      if (message.type === 'event') {
-        var objId = this.feedBtnMapping[message.id]
-        data = JSON.parse(JSON.stringify(this.feedObj[objId]))
-        this.$set(obj, message.id, data)
-      } else if (message.type === 'create-event') {
+      if (message.type === 'create-event') {
         data = JSON.parse(JSON.stringify(this.feedData[message.feedDataIndex])) // clone object
         data.objIndex = message.id
         this.$set(this.feedBtnMapping, message.feedBtnIndex, message.id)
         this.$set(this.feedObj, message.id, data)
+      } else if (message.type === 'event') {
+        objIndex = this.feedBtnMapping[message.id]
+        data = JSON.parse(JSON.stringify(this.feedObj[objIndex]))
+        this.$set(obj, objIndex, data)
       } else if (message.type === 'delete-event') {
-        var objIndex = this.feedBtnMapping[message.id]
+        objIndex = this.feedBtnMapping[message.id]
         this.$delete(status['event'], message.id)
+        this.$delete(obj, objIndex)
+        if (!isLive) {
+          timerfunc.clear('event' + message.id)
+          this.trigger(message, true)
+          return
+        }
+
         this.$delete(this.feedBtnMapping, message.id)
         this.$delete(this.feedObj, objIndex)
-        this.$delete(obj, objIndex)
       } else if (message.type === 'misc' && message.id === 'feeding') {
         if (value) {
           ref.play()
@@ -178,6 +197,9 @@ export default {
           setTimeout(function () { // hack. waiting for dom to update, i guess
             ref.pause()
           }, 1000)
+
+          if (!isLive) this.trigger(message, true)
+          return
         }
       } else if (message.type === 'fixed' && message.id === 'layout') {
         var that = this
@@ -186,7 +208,9 @@ export default {
         }, 1000)
       }
 
-      if (!isLive) {
+      if (!isLive && value === false) { // immediate removal
+        this.trigger(message, true)
+      } else if (!isLive) {
         timerfunc.countdown(message.type + message.id, true, this.trigger, message, true)
       }
     },
@@ -213,4 +237,10 @@ export default {
 </script>
 
 <style>
+</style>
+
+<style lang="stylus">
+.status-inline
+  display inline
+  color $green-4
 </style>
