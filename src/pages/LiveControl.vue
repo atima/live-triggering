@@ -336,7 +336,7 @@ export default {
         'room': this.room, 'type': 'create-event', 'id': this.feedObjIndex, 'feedDataIndex': this.feedDataIndex, 'feedBtnIndex': this.feedBtnIndex
       })
       timerfunc.countdown('create-event' + this.feedObjIndex, true)
-      if (this.status.misc.autoShowComment) this.trigger('event', this.feedBtnIndex, true)
+      this.trigger('event', this.feedBtnIndex, this.status.misc.autoShowComment)
 
       this.feedDataIndex++
       this.feedBtnIndex++

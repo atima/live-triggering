@@ -15,7 +15,7 @@
       :button-id="childImage.buttonId"
       :is-active="childImage.isActive"
       :is-visible="childImage.isVisible"
-      :style="(childImage.customStyle) ? childImage.customStyle : 'width: 10%; position: absolute; top: 1%; right: 1%;'">
+      :style="(childImage.customStyle) ? childImage.customStyle : 'width: 10%; position: absolute; top: 1%; left: 1%;'">
       <img :src="childImage.src" width="100%" />
     </wrapper>
 

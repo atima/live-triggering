@@ -14,6 +14,7 @@
             </comment-wrapper>
           </video-wrapper>
         </div>
+
         <div class="col q-ma-xs">
           <div class="text-white">Live</div>
           <video-wrapper ref="live"
@@ -131,7 +132,7 @@ export default {
   },
   methods: {
     getRamainingTime: timerfunc.getRamainingTime,
-    async loadVideo (status, ref) {
+    async initVideo (status, ref) {
       if (!this.cameraStream || !this.gameStream) {
         this.cameraStream = 'statics/camera.mp4'
         this.gameStream = 'statics/game.mp4'
@@ -146,6 +147,9 @@ export default {
         }
       }
 
+      this.loadVideo(status, ref)
+    },
+    loadVideo: function (status, ref) {
       switch (status.fixed.layout) {
         case 'gameMain':
           ref.load(this.gameStream, this.cameraStream)
@@ -158,6 +162,15 @@ export default {
           break
         default:
           ref.load(this.cameraStream, this.gameStream)
+      }
+    },
+    feeding: function (value, ref) {
+      if (value) {
+        ref.play()
+      } else {
+        setTimeout(function () { // hack. waiting for dom to update, i guess
+          ref.pause()
+        }, 1000)
       }
     },
     trigger: function (message, isLive = false) {
@@ -191,20 +204,11 @@ export default {
         this.$delete(this.feedBtnMapping, message.id)
         this.$delete(this.feedObj, objIndex)
       } else if (message.type === 'misc' && message.id === 'feeding') {
-        if (value) {
-          ref.play()
-        } else {
-          setTimeout(function () { // hack. waiting for dom to update, i guess
-            ref.pause()
-          }, 1000)
-
-          if (!isLive) this.trigger(message, true)
-          return
-        }
+        this.feeding(value, ref)
       } else if (message.type === 'fixed' && message.id === 'layout') {
         var that = this
         setTimeout(function () { // hack. waiting for dom to update, i guess
-          that.loadVideo(status, ref)
+          that.initVideo(status, ref)
         }, 1000)
       }
 
@@ -228,8 +232,8 @@ export default {
     this.socket.on('connect', this.joinRoom)
   },
   mounted () {
-    this.loadVideo(this.statusPreview, this.$refs.preview)
-    this.loadVideo(this.statusLive, this.$refs.live)
+    this.initVideo(this.statusPreview, this.$refs.preview)
+    this.initVideo(this.statusLive, this.$refs.live)
     this.socket.on('message', this.trigger)
     timerstore.delay = 3000
   }

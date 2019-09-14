@@ -12,7 +12,7 @@
         :color="commentProps.color"
         :button-id="item.btnIndex"
         :is-active="commentProps.isActive"
-        :is-visible="item.isVisible"
+        :is-visible="(typeof commentProps.visible === 'object') ? commentProps.visible[item.objIndex] : commentProps.visible"
         class="relative-position q-ma-xs">
         <strong>{{ item.name }}</strong>: {{ item.message }}
       </wrapper>

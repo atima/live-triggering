@@ -1,103 +1,54 @@
 <template>
   <q-page class="fit row bg-grey-10">
-    <screen :mode="status.fixed.layout">
-      <template v-slot:gameMain>
-        <wrapper class="relative-position q-ma-xs"
+    <div class="row fit">
+      <div class="col-9">
+        <video-wrapper ref="gameMain" class="relative-position q-ma-xs"
+          id="fixedlayout"
           color="pink"
           button-id="9"
           :is-active="status.mode.behavior==='fixed'"
-          :is-visible="status.fixed.layout==='gameMain'">
+          :is-visible="status.fixed.layout==='gameMain'"
+          :child-image="childImageConfig"
+          :child-video="childVideoConfig">
 
-          <video ref="gameFeed" width="100%" playsinline volume="0"
-            poster="statics/video-placeholder.png"
-            :src="gameStreamSrc">
-          </video>
-
-          <wrapper
-            color="pink"
-            button-id="1"
-            :is-active="status.mode.behavior==='fixed'"
-            :is-visible="status.fixed.logoObj"
-            style="width: 10%; position: absolute; top: 1%; right: 1%;">
-            <img src="statics/logo.svg" width="100%" />
-          </wrapper>
-
-          <wrapper
-            color="pink"
-            button-id="2"
-            :is-active="status.mode.behavior==='fixed'"
-            :is-visible="status.fixed.cameraObj"
-            style="width: 25%; position: absolute; top: 50%; left: 1%;">
-            <video ref="cameraFeed" width="100%" playsinline
-              poster="statics/video-placeholder.png"
-              :src="cameraStreamSrc">
-            </video>
-          </wrapper>
-
-          <wrapper
+          <comment-wrapper v-if="status.fixed.commentBoxObj"
+            id="fixedcommentBoxObj"
             color="pink"
             button-id="3"
             :is-active="status.mode.behavior==='fixed'"
             :is-visible="status.fixed.commentBoxObj"
-            style="width: 30%; height: 40%; position: absolute;top: 30%; right: 1%;">
-            <div v-chat-scroll="{always: true, scrollonremoved:true}" class="commentBox">
-              <wrapper v-for="item in feedObj" :key="item.objIndex"
-                color="blue"
-                :button-id="item.btnIndex"
-                :is-active="status.mode.behavior==='event'"
-                :is-visible="status.event[item.btnIndex]"
-                class="relative-position q-ma-xs">
-                <strong>{{ item.name }}</strong>: {{ item.message }}
-              </wrapper>
-            </div>
-          </wrapper>
-        </wrapper>
-      </template>
+            :comments="feedObj" :comment-props="commentConfig">
+          </comment-wrapper>
+        </video-wrapper>
+      </div>
 
-      <template v-slot:gameOnly>
-        <wrapper class="relative-position q-ma-xs"
+      <div class="col-3 column">
+        <video-wrapper ref="gameOnly" class="relative-position q-ma-xs"
           color="pink"
           button-id="10"
           :is-active="status.mode.behavior==='fixed'"
-          :is-visible="status.fixed.layout==='gameOnly'">
-          <video ref="gameFeedOnly" width="100%"
-            poster="statics/video-placeholder.png"
-            :src="gameStreamSrc">
-          </video>
-        </wrapper>
-      </template>
+          :is-visible="status.fixed.layout==='gameOnly'"
+          :child-image="childImageConfig">
+        </video-wrapper>
 
-      <template v-slot:cameraOnly>
-        <wrapper class="relative-position q-ma-xs"
+        <video-wrapper ref="cameraOnly" class="relative-position q-ma-xs"
           color="pink"
           button-id="11"
           :is-active="status.mode.behavior==='fixed'"
-          :is-visible="status.fixed.layout==='cameraOnly'">
-          <video ref="cameraFeedOnly" width="100%"
-            poster="statics/video-placeholder.png"
-            :src="cameraStreamSrc">
-          </video>
-        </wrapper>
-      </template>
+          :is-visible="status.fixed.layout==='cameraOnly'"
+          :child-image="childImageConfig">
+        </video-wrapper>
 
-      <template v-slot:cameraMain>
-        <wrapper class="relative-position q-ma-xs"
+        <video-wrapper ref="cameraMain" class="relative-position q-ma-xs"
           color="pink"
           button-id="12"
           :is-active="status.mode.behavior==='fixed'"
-          :is-visible="status.fixed.layout==='cameraMain'">
-            <video ref="camera2" width="100%"
-              poster="statics/video-placeholder.png"
-              :src="cameraStreamSrc">
-            </video>
-
-            <video ref="game2" width="30%" style="position: absolute; top: 1%; left: 1%;"
-              poster="statics/video-placeholder.png"
-              :src="gameStreamSrc">
-            </video>
-        </wrapper>
-      </template>
-    </screen>
+          :is-visible="status.fixed.layout==='cameraMain'"
+          :child-image="childImageConfig"
+          :child-video="childVideoConfig">
+        </video-wrapper>
+      </div>
+    </div>
   </q-page>
 </template>
 
@@ -107,25 +58,25 @@
  * All event objects are comments.
  */
 
+import io from 'socket.io-client'
 import Vue from 'vue'
 import VueChatScroll from 'vue-chat-scroll'
 Vue.use(VueChatScroll)
 
-import io from 'socket.io-client'
-import Wrapper from 'components/Wrapper'
-import Screen from 'components/Screen'
+import VideoWrapper from 'components/VideoWrapper'
+import CommentWrapper from 'components/CommentWrapper'
 
 export default {
   name: 'PageIndex',
   components: {
-    Wrapper,
-    Screen
+    VideoWrapper,
+    CommentWrapper
   },
   data () {
     return {
       socket: {},
-      gameStreamSrc: 'statics/game.mp4',
-      cameraStreamSrc: 'statics/camera.mp4',
+      gameStream: null,
+      cameraStream: null,
       feedDataIndex: 0,
       feedData: [
         { name: 'Admin', message: 'Thank you for participating in this study.' },
@@ -166,96 +117,100 @@ export default {
       }
     }
   },
+  computed: {
+    childImageConfig: function () {
+      return {
+        'id': 'fixedlogoObj',
+        'color': 'pink',
+        'buttonId': '1',
+        'src': 'statics/logo.svg',
+        'isActive': this.status.mode.behavior === 'fixed',
+        'isVisible': this.status.fixed.logoObj
+      }
+    },
+    childVideoConfig: function () {
+      return {
+        'id': 'fixedcameraObj',
+        'color': 'pink',
+        'buttonId': '2',
+        'isActive': this.status.mode.behavior === 'fixed',
+        'isVisible': this.status.fixed.cameraObj
+      }
+    },
+    commentConfig: function () {
+      return {
+        'color': 'blue',
+        'isActive': this.status.mode.behavior === 'event',
+        'visible': this.status.event
+      }
+    }
+  },
   methods: {
-    loadCamera () {
-      if (process.env.DEV) return
+    async initVideo () {
+      if (!this.cameraStream || !this.gameStream) {
+        this.cameraStream = 'statics/camera.mp4'
+        this.gameStream = 'statics/game.mp4'
 
-      navigator.mediaDevices.getUserMedia({
-        'video': { 'width': 320, 'height': 180 }
-      }).then(stream => {
-        this.$refs.cameraFeed.srcObject = stream
-        this.$refs.cameraFeedOnly.srcObject = stream
-        this.$refs.camera2.srcObject = stream
-      }, error => {
-        console.log('Unable to acquire webcam', error)
-      })
-    },
-    loadScreen: function () {
-      if (process.env.DEV) return
-
-      navigator.mediaDevices.getDisplayMedia({
-        'video': { 'width': 640, 'height': 360 }
-      }).then(stream => {
-        this.$refs.gameFeed.srcObject = stream
-        this.$refs.gameFeedOnly.srcObject = stream
-        this.$refs.game2.srcObject = stream
-      }, error => {
-        console.log('Unable to acquire screen capture', error)
-      })
-    },
-    loadFeed: function (feedDataIndex, feedBtnIndex, feedObjIndex) {
-      var data = JSON.parse(JSON.stringify(this.feedData[feedDataIndex])) // clone object
-      data.btnIndex = feedBtnIndex
-      data.objIndex = feedObjIndex
-
-      // Reuse the button. Clear the number from the existing object.
-      if (typeof this.feedBtnMapping[feedBtnIndex] !== 'undefined') {
-        var removeBtnIndexFrom = this.feedBtnMapping[feedBtnIndex]
-        this.$delete(this.feedObj[removeBtnIndexFrom], 'btnIndex')
+        if (!process.env.DEV) {
+          this.cameraStream = await navigator.mediaDevices.getUserMedia({
+            'video': { 'width': 320, 'height': 180 }
+          })
+          this.gameStream = await navigator.mediaDevices.getDisplayMedia({
+            'video': { 'width': 640, 'height': 360 }
+          })
+        }
       }
 
-      this.$set(this.feedBtnMapping, feedBtnIndex, feedObjIndex)
-      this.$set(this.feedObj, feedObjIndex, data)
-      this.$set(this.status['event'], feedBtnIndex, this.status.misc.autoShowComment)
+      this.loadVideo()
     },
-    start: function () {
-      try {
-        this.$refs.gameFeed.play()
-        this.$refs.gameFeedOnly.play()
-        this.$refs.game2.play()
-        this.$refs.cameraFeed.play()
-        this.$refs.cameraFeedOnly.play()
-        this.$refs.camera2.play()
-      } catch (error) {
-        console.error(error)
-      }
+    loadVideo: function () {
+      this.$refs.gameMain.load(this.gameStream, this.cameraStream)
+      this.$refs.gameOnly.load(this.gameStream)
+      this.$refs.cameraOnly.load(this.cameraStream)
+      this.$refs.cameraMain.load(this.cameraStream, this.gameStream)
     },
-    stop: function () {
-      try {
-        this.$refs.gameFeed.pause()
-        this.$refs.gameFeedOnly.pause()
-        this.$refs.game2.pause()
-        this.$refs.cameraFeed.pause()
-        this.$refs.cameraFeedOnly.pause()
-        this.$refs.camera2.pause()
-      } catch (error) {
-        console.error(error)
-      }
-    },
-    setFeeding: function (feeding) {
-      if (feeding) {
-        this.start()
+    feeding: function (value) {
+      if (value) {
+        this.$refs.gameMain.play()
+        this.$refs.gameOnly.play()
+        this.$refs.cameraOnly.play()
+        this.$refs.cameraMain.play()
       } else {
-        this.stop()
+        this.$refs.gameMain.pause()
+        this.$refs.gameOnly.pause()
+        this.$refs.cameraOnly.pause()
+        this.$refs.cameraMain.pause()
       }
     },
     trigger: function (message) {
-      if (message.type === 'create-event') {
-        this.loadFeed(message.feedDataIndex, message.feedBtnIndex, message.feedObjIndex)
-        return
-      } else if (message.type === 'delete-event') {
-        var objIndex = this.feedBtnMapping[message.id]
-        this.$delete(this.status['event'], message.id)
-        this.$delete(this.feedBtnMapping, message.id)
-        this.$delete(this.feedObj, objIndex)
-        return
-      }
+      var data, objIndex
+      var status = this.status
 
       var value = (message.value === 'true') ? true : (message.value === 'false') ? false : message.value
-      this.$set(this.status[message.type], message.id, value)
+      if (status[message.type]) this.$set(status[message.type], message.id, value)
 
-      if (message.type === 'misc' && message.id === 'feeding') {
-        this.setFeeding(value)
+      if (message.type === 'create-event') {
+        data = JSON.parse(JSON.stringify(this.feedData[message.feedDataIndex])) // clone object
+        data.btnIndex = message.feedBtnIndex
+        data.objIndex = message.id
+
+        // Reuse the button. Clear the number from the existing object.
+        if (typeof this.feedBtnMapping[message.feedBtnIndex] !== 'undefined') {
+          var removeBtnIndexFrom = this.feedBtnMapping[message.feedBtnIndex]
+          this.$delete(this.feedObj[removeBtnIndexFrom], 'btnIndex')
+        }
+
+        this.$set(this.feedBtnMapping, message.feedBtnIndex, message.id)
+        this.$set(this.feedObj, message.id, data)
+      } else if (message.type === 'event') {
+
+      } else if (message.type === 'delete-event') {
+        objIndex = this.feedBtnMapping[message.id]
+        this.$delete(status['event'], message.id)
+        this.$delete(this.feedBtnMapping, message.id)
+        this.$delete(this.feedObj, objIndex)
+      } else if (message.type === 'misc' && message.id === 'feeding') {
+        this.feeding(value)
       }
     },
     joinRoom: function () {
@@ -272,31 +227,11 @@ export default {
     this.socket.on('connect', this.joinRoom)
   },
   mounted () {
-    this.loadScreen()
-    this.loadCamera()
+    this.initVideo()
     this.socket.on('message', this.trigger)
   }
 }
 </script>
 
 <style>
-.commentBox {
-  width: 100%;
-  height: 100%;
-  background-color: white;
-  overflow-x: hidden;
-  overflow-y: scroll;
-}
-.commentBox::-webkit-scrollbar {
-  width: 5px;
-}
-.commentBox::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-.commentBox::-webkit-scrollbar-thumb {
-  background: #888;
-}
-.commentBox::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
 </style>
