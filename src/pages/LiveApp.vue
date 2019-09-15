@@ -218,7 +218,7 @@ export default {
   },
   methods: {
     getRamainingTime: timerfunc.getRamainingTime,
-    async initVideo () {
+    async initVideo (status, ref) {
       if (!this.cameraStream || !this.gameStream) {
         this.cameraStream = 'statics/camera.mp4'
         this.gameStream = 'statics/game.mp4'
@@ -232,6 +232,8 @@ export default {
           })
         }
       }
+
+      this.loadVideo(status, ref)
     },
     loadVideo: function (status, ref) {
       if (this.$route.params.design === 'A') {
@@ -255,9 +257,10 @@ export default {
         this.$refs.cameraMain.load(this.cameraStream, this.gameStream)
       }
     },
-    feeding: function (value, ref) {
+    feeding: function (value, status, ref) {
       if (this.$route.params.design === 'A') {
         if (value) {
+          this.loadVideo(status, ref)
           ref.play()
         } else {
           setTimeout(function () { // hack. waiting for dom to update, i guess
@@ -266,6 +269,7 @@ export default {
         }
       } else {
         if (value) {
+          this.loadVideo()
           this.$refs.gameMain.play()
           this.$refs.gameOnly.play()
           this.$refs.cameraOnly.play()
@@ -317,11 +321,11 @@ export default {
         this.$delete(this.feedBtnMapping, message.feedBtnIndex)
         this.$delete(this.feedObj, message.id)
       } else if (message.type === 'misc' && message.id === 'feeding') {
-        this.feeding(value, ref)
+        this.feeding(value, status, ref)
       } else if (this.$route.params.design === 'A' && message.type === 'fixed' && message.id === 'layout') {
         var that = this
         setTimeout(function () { // hack. waiting for dom to update, i guess
-          that.loadVideo(status, ref)
+          that.initVideo(status, ref)
         }, 1000)
       }
 
@@ -345,16 +349,12 @@ export default {
     this.socket.on('connect', this.joinRoom)
   },
   mounted () {
-    this.initVideo()
     if (this.$route.params.design === 'A') {
-      this.loadVideo(this.statusPreview, this.$refs.preview)
-      var that = this
-      setTimeout(function () { // hack. waiting for dom to update, i guess
-        that.loadVideo(that.statusLive, that.$refs.live)
-      }, 1000)
+      this.initVideo(this.statusPreview, this.$refs.preview)
+      this.initVideo(this.statusLive, this.$refs.live)
       timerstore.delay = 3000
     } else {
-      this.loadVideo()
+      this.initVideo()
     }
 
     this.socket.on('message', this.trigger)
