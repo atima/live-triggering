@@ -8,8 +8,8 @@
           :id="'event' + feedBtn[i].objIndex"
           :bgColor="feedBtn[i].color"
           :is-button="true"
-          :is-visible="status.event[i]"
-          @click.native="triggerEvent(i)">
+          :is-visible="status.event[feedBtn[i].objIndex]"
+          @click.native="triggerEvent(i, feedBtn[i].objIndex)">
             Comment<br />
             {{ feedBtn[i].name }}
         </wrapper>
@@ -132,8 +132,8 @@
           :bgColor="feedBtn[i].color"
           :button-id="i"
           :is-button="true"
-          :is-visible="status.event[i]"
-          @click.native="triggerEvent(i)">
+          :is-visible="status.event[feedBtn[i].objIndex]"
+          @click.native="triggerEvent(i, feedBtn[i].objIndex)">
             Comment<br />
             {{ feedBtn[i].name }}
         </wrapper>
@@ -319,9 +319,6 @@ export default {
     }
   },
   methods: {
-    getEventId: function (feedBtnIndex) {
-      return (this.status.event[feedBtnIndex]) ? 'delete-event' + feedBtnIndex : 'event' + feedBtnIndex
-    },
     loadFeed: function () {
       if (!this.status.misc.feeding) return
 
@@ -330,13 +327,13 @@ export default {
       data.color = (this.feedObjLightColor) ? 'white' : 'blue-1'
 
       this.$set(this.feedBtn, this.feedBtnIndex, data)
-      this.$set(this.status['event'], this.feedBtnIndex, this.status.misc.autoShowComment)
+      this.$set(this.status['event'], this.feedObjIndex, this.status.misc.autoShowComment)
 
       this.socket.emit('message', {
         'room': this.room, 'type': 'create-event', 'id': this.feedObjIndex, 'feedDataIndex': this.feedDataIndex, 'feedBtnIndex': this.feedBtnIndex
       })
       timerfunc.countdown('create-event' + this.feedObjIndex, true)
-      this.trigger('event', this.feedBtnIndex, this.status.misc.autoShowComment)
+      if (this.status.misc.autoShowComment) this.trigger('event', this.feedObjIndex, true)
 
       this.feedDataIndex++
       this.feedBtnIndex++
@@ -353,13 +350,13 @@ export default {
       this.socket.emit('message', { 'room': this.room, 'type': type, 'id': id, 'value': value })
       timerfunc.countdown(type + id, true)
     },
-    triggerEvent: function (btnIndex) {
-      if (this.status.event[btnIndex]) {
+    triggerEvent: function (btnIndex, objIndex) {
+      if (this.status.event[objIndex]) {
         this.$delete(this.feedBtn, btnIndex)
-        this.socket.emit('message', { 'room': this.room, 'type': 'delete-event', 'id': btnIndex })
-        timerfunc.countdown('delete-event' + btnIndex, true)
+        this.socket.emit('message', { 'room': this.room, 'type': 'delete-event', 'id': objIndex, 'feedBtnIndex': btnIndex })
+        timerfunc.countdown('delete-event' + objIndex, true)
       } else {
-        this.trigger('event', btnIndex, true)
+        this.trigger('event', objIndex, true)
       }
     },
     joinRoom: function () {

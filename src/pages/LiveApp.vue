@@ -7,11 +7,13 @@
           <div class="text-white">Preview</div>
           <video-wrapper ref="preview"
             id="fixedlayout"
-            :child-image="(statusPreview.fixed.logoObj) ? { 'id': 'fixedlogoObj', 'src': 'statics/logo.svg' } : null"
+            :is-visible="true"
+            :child-image="(statusPreview.fixed.logoObj) ? { 'id': 'fixedlogoObj', 'src': 'statics/logo.svg', 'isVisible': true } : null"
             :child-video="(statusPreview.fixed.cameraObj) ? { 'id': 'fixedcameraObj', 'isVisible': true } : null">
             <comment-wrapper v-if="this.statusPreview.fixed.layout==='gameMain' && statusPreview.fixed.commentBoxObj"
               id="fixedcommentBoxObj"
-              :comments="feedObjPreview" :comment-props="{'isActive': true}">
+              :is-visible="true"
+              :comments="feedObjPreview" :comment-props="{ 'isActive': true, 'visible': true }">
             </comment-wrapper>
           </video-wrapper>
         </div>
@@ -19,10 +21,12 @@
         <div class="col q-ma-xs">
           <div class="text-white">Live</div>
           <video-wrapper ref="live"
-            :child-image="(statusLive.fixed.logoObj) ? { 'src': 'statics/logo.svg' } : null"
+            :is-visible="true"
+            :child-image="(statusLive.fixed.logoObj) ? { 'src': 'statics/logo.svg', 'isVisible': true } : null"
             :child-video="(statusLive.fixed.cameraObj) ? { 'isVisible': true } : null">
             <comment-wrapper v-if="this.statusLive.fixed.layout==='gameMain' && statusLive.fixed.commentBoxObj"
-              :comments="feedObjLive" :comment-props="{'isActive': true}">
+              :is-visible="true"
+              :comments="feedObjLive" :comment-props="{ 'isActive': true, 'visible': true }">
             </comment-wrapper>
           </video-wrapper>
         </div>
@@ -279,7 +283,7 @@ export default {
     trigger: function (message, isLive = false) {
       if (this.$route.params.design !== 'A') isLive = true
 
-      var data, objIndex
+      var data
       var status = (isLive) ? this.statusLive : this.statusPreview
       var obj = (isLive) ? this.feedObjLive : this.feedObjPreview
       var ref = (isLive) ? this.$refs.live : this.$refs.preview
@@ -301,21 +305,19 @@ export default {
         this.$set(this.feedBtnMapping, message.feedBtnIndex, message.id)
         this.$set(this.feedObj, message.id, data)
       } else if (message.type === 'event') {
-        objIndex = this.feedBtnMapping[message.id]
-        data = JSON.parse(JSON.stringify(this.feedObj[objIndex]))
-        this.$set(obj, objIndex, data)
+        data = JSON.parse(JSON.stringify(this.feedObj[message.id]))
+        this.$set(obj, message.id, data)
       } else if (message.type === 'delete-event') {
-        objIndex = this.feedBtnMapping[message.id]
         this.$delete(status['event'], message.id)
-        this.$delete(obj, objIndex)
+        this.$delete(obj, message.id)
         if (!isLive) {
           timerfunc.clear('event' + message.id)
           this.trigger(message, true)
           return
         }
 
-        this.$delete(this.feedBtnMapping, message.id)
-        this.$delete(this.feedObj, objIndex)
+        this.$delete(this.feedBtnMapping, message.feedBtnIndex)
+        this.$delete(this.feedObj, message.id)
       } else if (message.type === 'misc' && message.id === 'feeding') {
         this.feeding(value, ref)
       } else if (this.$route.params.design === 'A' && message.type === 'fixed' && message.id === 'layout') {
@@ -359,4 +361,10 @@ export default {
 </script>
 
 <style>
+</style>
+
+<style lang="stylus">
+.status-inline
+  display inline
+  color $green-4
 </style>
