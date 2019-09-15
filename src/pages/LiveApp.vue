@@ -218,7 +218,7 @@ export default {
   },
   methods: {
     getRamainingTime: timerfunc.getRamainingTime,
-    async initVideo (status, ref) {
+    async initVideo () {
       if (!this.cameraStream || !this.gameStream) {
         this.cameraStream = 'statics/camera.mp4'
         this.gameStream = 'statics/game.mp4'
@@ -232,8 +232,6 @@ export default {
           })
         }
       }
-
-      this.loadVideo(status, ref)
     },
     loadVideo: function (status, ref) {
       if (this.$route.params.design === 'A') {
@@ -323,7 +321,7 @@ export default {
       } else if (this.$route.params.design === 'A' && message.type === 'fixed' && message.id === 'layout') {
         var that = this
         setTimeout(function () { // hack. waiting for dom to update, i guess
-          that.initVideo(status, ref)
+          that.loadVideo(status, ref)
         }, 1000)
       }
 
@@ -347,12 +345,16 @@ export default {
     this.socket.on('connect', this.joinRoom)
   },
   mounted () {
+    this.initVideo()
     if (this.$route.params.design === 'A') {
-      this.initVideo(this.statusPreview, this.$refs.preview)
-      this.initVideo(this.statusLive, this.$refs.live)
+      this.loadVideo(this.statusPreview, this.$refs.preview)
+      var that = this
+      setTimeout(function () { // hack. waiting for dom to update, i guess
+        that.loadVideo(that.statusLive, that.$refs.live)
+      }, 1000)
       timerstore.delay = 3000
     } else {
-      this.initVideo()
+      this.loadVideo()
     }
 
     this.socket.on('message', this.trigger)
