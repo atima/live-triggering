@@ -78,9 +78,12 @@
           Auto Show Comment
       </wrapper>
 
+      <q-btn class="deckBtn"></q-btn>
+
       <wrapper class="deckBtn"
         :is-button="true"
         :is-visible="false"
+        icon="folder"
         @click.native="status.mode.type = 'comment'">
           Comment Items
       </wrapper>
@@ -88,11 +91,10 @@
       <wrapper class="deckBtn"
         :is-button="true"
         :is-visible="false"
+        icon="folder"
         @click.native="status.mode.type = 'layout'">
           Layout
       </wrapper>
-
-      <q-btn class="deckBtn"></q-btn>
 
       <wrapper class="deckBtn"
         id="fixedlogoObj"
@@ -107,7 +109,7 @@
         :is-button="true"
         :is-visible="status.fixed.cameraObj"
         @click.native="trigger('fixed', 'cameraObj', !status.fixed.cameraObj)">
-          Camera
+          Mini Video
       </wrapper>
 
       <wrapper class="deckBtn"
@@ -158,7 +160,7 @@
         :is-button="true"
         :is-visible="status.fixed.cameraObj"
         @click.native="trigger('fixed', 'cameraObj', !status.fixed.cameraObj)">
-          Camera
+          Mini Video
       </wrapper>
 
       <wrapper class="deckBtn"

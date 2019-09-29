@@ -4,7 +4,9 @@
     :color="bgColor" text-color="black"
     :style="{ 'border-color': colorHex }">
     <q-badge v-if="buttonId" :color="color" floating transparent>{{ buttonId }}</q-badge>
-    <div class="status" v-if="isVisible && getRamainingTime(id) > 0">{{ getRamainingTime(id) }}</div>
+
+    <q-icon v-if="icon" :name="icon" class="status" style="color: #ccc;" />
+    <div class="status" v-else-if="isVisible && getRamainingTime(id) > 0">{{ getRamainingTime(id) }}</div>
     <q-icon v-else-if="isVisible" name="check_circle" class="status" />
 
     <slot></slot>
@@ -32,6 +34,7 @@ export default {
     'id': String,
     'color': String,
     'bgColor': String,
+    'icon': String,
     'buttonId': [String, Number],
     'isButton': {
       type: Boolean,

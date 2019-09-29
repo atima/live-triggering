@@ -61,7 +61,7 @@
           :child-image="childImageConfig"
           :child-video="childVideoConfig">
 
-          <comment-wrapper v-if="statusLive.fixed.commentBoxObj"
+          <comment-wrapper
             id="fixedcommentBoxObj"
             color="pink"
             button-id="3"
@@ -131,18 +131,18 @@ export default {
       feedDataIndex: 0,
       feedData: [
         { name: 'Admin', message: 'Thank you for participating in this study.' },
-        { name: 'Admin', message: 'Try following the order in this comment box.' },
-        { name: 'A', message: 'Click \'Event\' button to change category.' },
-        { name: 'A', message: 'Click a button to remove this comment.' },
-        { name: 'B', message: 'Click \'Fixed\' button to change category.' },
-        { name: 'C', message: 'Click a button to hide camera from viewers.' },
-        { name: 'C', message: 'Hidden objects have a dashed border.' },
-        { name: 'D', message: 'Click \'Misc\' button to change category.' },
-        { name: 'E', message: 'Disable \'Auto show comment\'.' },
-        { name: 'E', message: 'Now new comment will not be automatically shown.' },
-        { name: 'F', message: 'Go back to \'Event\'.' },
-        { name: 'G', message: 'Click a button twice to show and remove this comment.' },
-        { name: 'H', message: 'End.' }
+        { name: 'A', message: 'Just nice :-)' },
+        { name: 'A', message: 'Gorgeous shot, friend.' },
+        { name: 'B', message: 'Incredibly appealing shot mate' },
+        { name: 'C', message: 'Sleek work you have here.' },
+        { name: 'C', message: 'OMG How do you do it?' },
+        { name: 'D', message: 'Could you explain more?' },
+        { name: 'E', message: 'Follow!' },
+        { name: 'F', message: 'Let me take a nap... great camera angle, anyway.' },
+        { name: 'F', message: 'See << URL >>' },
+        { name: 'F', message: 'Much better than this boring talk...' },
+        { name: 'G', message: '<< some bad words >>' },
+        { name: 'H', message: 'What\'s up with those...' }
       ],
       feedObj: {},
       feedObjPreview: {},
@@ -224,12 +224,21 @@ export default {
         this.gameStream = 'statics/game.mp4'
 
         if (!process.env.DEV) {
-          this.cameraStream = await navigator.mediaDevices.getUserMedia({
-            'video': { 'width': 320, 'height': 180 }
-          })
-          this.gameStream = await navigator.mediaDevices.getDisplayMedia({
-            'video': { 'width': 640, 'height': 360 }
-          })
+          try {
+            this.cameraStream = await navigator.mediaDevices.getUserMedia({
+              'video': { 'width': 320, 'height': 180 }
+            })
+          } catch (err) {
+            console.log('cannot load camera')
+          }
+
+          try {
+            this.gameStream = await navigator.mediaDevices.getDisplayMedia({
+              'video': { 'width': 640, 'height': 360 }
+            })
+          } catch (err) {
+            console.log('cannot share screen')
+          }
         }
       }
 
